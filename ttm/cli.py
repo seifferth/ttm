@@ -47,8 +47,8 @@ def cli(argv):
     opts = { short2long.get(k, k): v for k, v in opts }
     if '--help' in opts:
         raise HelpRequested(_cli_help)
-    infile  = open(opts['--input'],  'r') if '--input'  in opts \
-              else sys.stdin
+    infile  = Corpus(open(opts['--input'], 'r') if '--input' in opts \
+                     else sys.stdin)
     outfile = open(opts['--output'], 'w') if '--output' in opts \
               else sys.stdout
     c = { 'cat': cat._cli, '20cat': c20cat._cli, 'embed': embed._cli,
