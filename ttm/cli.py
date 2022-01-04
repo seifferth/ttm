@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import sys
+import sys, gzip, bz2, lzma
 from getopt import getopt, GetoptError
 from common_types import *
 import cat, c20cat, embed, redim, cluster, desc, eval as ttm_eval
@@ -12,9 +12,13 @@ See 'ttm COMMAND --help' for subcommand-specific help messages
 
 Global Options
     -i FILE, --input FILE
-                  Read input from FILE (default: stdin)
+                  Read input from FILE (default: stdin; if the filename
+                  extension is one of '.gz', '.bz2' or '.xz', the input
+                  will be decompressed on the fly)
     -o FILE, --output FILE
-                  Write output to FILE (default: stdout)
+                  Write output to FILE (default: stdout; if the filename
+                  extension is one of '.gz', '.bz2' or '.xz', the output
+                  will be compressed on the fly)
     -h, --help    Print this help message and exit
 
 Commands
@@ -34,6 +38,27 @@ Commands
                   columns
 """.lstrip()
 
+def _open(filename, direction):
+    """
+    Wrapper around a number of file opening functions that takes the
+    filename into account to handle a number of special cases, such
+    as compressed files and special syntax for stdin and stdout.
+    """
+    if direction not in ['in','out']:
+        raise Exception("Direction must be one of 'in' or 'out', "\
+                       f"not '{direction}'")
+    mode = 'rt' if direction == 'in' else 'wt'
+    if filename == '-':
+        return sys.stdin if direction == 'in' else sys.stdout
+    elif filename.endswith('.gz'):
+        return gzip.open(filename, mode)
+    elif filename.endswith('.bz2'):
+        return bz2.open(filename, mode)
+    elif filename.endswith('.xz'):
+        return lzma.open(filename, mode)
+    else:
+        return open(filename, mode)
+
 def cli(argv):
     """
     Run the ttm cli for a given list of arguments. This function will
@@ -45,12 +70,14 @@ def cli(argv):
     opts, cmd = getopt(argv, 'i:o:h', ['input=', 'output=', 'help'])
     short2long = { '-i': '--input', '-o': '--output', '-h': '--help' }
     opts = { short2long.get(k, k): v for k, v in opts }
+    # Default values
+    if '--input' not in opts: opts['--input'] = '-'
+    if '--output' not in opts: opts['--output'] = '-'
+    # Option processing
     if '--help' in opts:
         raise HelpRequested(_cli_help)
-    infile  = Corpus(open(opts['--input'], 'r') if '--input' in opts \
-                     else sys.stdin)
-    outfile = open(opts['--output'], 'w') if '--output' in opts \
-              else sys.stdout
+    infile = Corpus(_open(opts['--input'], 'in'))
+    outfile = _open(opts['--output'], 'out')
     c = { 'cat': cat._cli, '20cat': c20cat._cli, 'embed': embed._cli,
           'redim': redim._cli, 'cluster': cluster._cli, 'desc': desc._cli,
           'eval': ttm_eval._cli }
