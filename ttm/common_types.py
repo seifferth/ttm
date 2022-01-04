@@ -15,20 +15,28 @@ class Corpus():
     """
     def __init__(self, file):
         self.cache = list()
+        self.cache_complete = False
         self.file = file
+        self.file_accessed = False
     def __iter__(self):
         if self.file.seekable():
             self.file.seek(0)
             for line in self.file:
                 line = line.rstrip('\n').rstrip('\r')
                 yield line
-        else:
+        elif self.cache_complete:
             for line in self.cache:
                 yield line
+        elif not self.file_accessed:
+            self.file_accessed = True
             for line in self.file:
                 line = line.rstrip('\n').rstrip('\r')
                 self.cache.append(line)
                 yield line
+            self.cache_complete = True
+        else:
+            raise Exception('Second iteration over corpus started before '\
+                            'cache was fully populated during first one')
     def column(self, column: str):
         """
         Return an iterable over the contents found in a specified column
