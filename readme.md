@@ -76,3 +76,4 @@ need to be installed on the system for `ttm` to work:
 - sklearn
 - gensim
 - sentence_transformers
+- umap-learn
