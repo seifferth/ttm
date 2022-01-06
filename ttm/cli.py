@@ -69,15 +69,15 @@ def cli(argv):
     """
     opts, cmd = getopt(argv, 'i:o:h', ['input=', 'output=', 'help'])
     short2long = { '-i': '--input', '-o': '--output', '-h': '--help' }
-    opts = { short2long.get(k, k): v for k, v in opts }
+    opts = { short2long.get(k, k).lstrip('-'): v for k, v in opts }
     # Default values
-    if '--input' not in opts: opts['--input'] = '-'
-    if '--output' not in opts: opts['--output'] = '-'
+    if 'input' not in opts: opts['input'] = '-'
+    if 'output' not in opts: opts['output'] = '-'
     # Option processing
-    if '--help' in opts:
+    if 'help' in opts:
         raise HelpRequested(_cli_help)
-    infile = Corpus(_open(opts['--input'], 'in'))
-    outfile = _open(opts['--output'], 'out')
+    infile = Corpus(_open(opts['input'], 'in'))
+    outfile = _open(opts['output'], 'out')
     c = { 'cat': cat._cli, '20cat': c20cat._cli, 'embed': embed._cli,
           'redim': redim._cli, 'cluster': cluster._cli, 'desc': desc._cli,
           'eval': ttm_eval._cli }

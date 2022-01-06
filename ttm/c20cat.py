@@ -16,8 +16,8 @@ Command Options
 def _cli(argv, infile, outfile):
     opts, cmd = getopt(argv, 'h', ['help'])
     short2long = { '-h': '--help' }
-    opts = { short2long.get(k, k): v for k, v in opts }
-    if '--help' in opts:
+    opts = { short2long.get(k, k).lstrip('-'): v for k, v in opts }
+    if 'help' in opts:
         raise HelpRequested(_cli_help)
     raise Exception('ttm 20cat not implemented yet')
 
