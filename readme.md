@@ -70,4 +70,9 @@ redirection when working with large corpora.
 The examples given above all refer to a single `ttm` command. This command
 is provided by the executable `ttm/cli.py` script. It is advised to create
 a symlink to this file from some directory included in the user's `PATH`
-and to name this symlink `ttm`.
+and to name this symlink `ttm`. Furthermore, the following python modules
+need to be installed on the system for `ttm` to work:
+
+- sklearn
+- gensim
+- sentence_transformers
