@@ -7,7 +7,7 @@ _cli_help="""
 Usage: ttm [OPT]... eval [--help] FILE [FILE]...
 
 Certain evaluation metrics (e. g. overlap) can only be calculated
-if at least two distinct topic models are provided
+if at least two distinct topic models are provided.
 
 Evaluation Metrics
     TODO
