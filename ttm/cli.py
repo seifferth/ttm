@@ -82,11 +82,11 @@ def cli(argv):
           'redim': redim._cli, 'cluster': cluster._cli, 'desc': desc._cli,
           'eval': ttm_eval._cli }
     if len(cmd) == 0:
-        raise Exception('ttm command is missing')
+        raise Exception('No COMMAND specified for ttm')
     elif cmd[0] in c:
         c[cmd[0]](argv=cmd[1:], infile=infile, outfile=outfile)
     else:
-        raise Exception(f'ttm command {cmd[0]} not recognized')
+        raise Exception(f"Unknown ttm COMMAND '{cmd[0]}'")
 
 if __name__ == "__main__":
     try:
