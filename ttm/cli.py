@@ -77,10 +77,13 @@ def cli(argv):
     c = { 'cat': cat, '20cat': c20cat, 'embed': embed, 'redim': redim,
           'cluster': cluster, 'desc': desc, 'eval': ttm_eval }
     if 'help' in opts:
-        if cmd and cmd[0] in c:
+        if not cmd:
+            raise HelpRequested(_cli_help)
+        elif cmd and cmd[0] in c:
             raise HelpRequested(c[cmd[0]]._cli_help)
         else:
-            raise HelpRequested(_cli_help)
+            raise Exception('Unable to display help message for unknown '\
+                           f"Unknown ttm COMMAND '{cmd[0]}'")
     if len(cmd) == 0:
         raise Exception('No COMMAND specified for ttm')
     elif cmd[0] in c:
