@@ -77,3 +77,4 @@ need to be installed on the system for `ttm` to work:
 - gensim
 - sentence_transformers
 - umap-learn
+- hdbscan
