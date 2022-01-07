@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import sys, gzip, bz2, lzma
 from getopt import getopt, GetoptError
 from common_types import *
 import cat, c20cat, embed, redim, cluster, desc, eval as ttm_eval
@@ -38,27 +37,6 @@ Commands
                   columns.
 """.lstrip()
 
-def _open(filename, direction):
-    """
-    Wrapper around a number of file opening functions that takes the
-    filename into account to handle a number of special cases, such
-    as compressed files and special syntax for stdin and stdout.
-    """
-    if direction not in ['in','out']:
-        raise Exception("Direction must be one of 'in' or 'out', "\
-                       f"not '{direction}'")
-    mode = 'rt' if direction == 'in' else 'wt'
-    if filename == '-':
-        return sys.stdin if direction == 'in' else sys.stdout
-    elif filename.endswith('.gz'):
-        return gzip.open(filename, mode)
-    elif filename.endswith('.bz2'):
-        return bz2.open(filename, mode)
-    elif filename.endswith('.xz'):
-        return lzma.open(filename, mode)
-    else:
-        return open(filename, mode)
-
 def cli(argv):
     """
     Run the ttm cli for a given list of arguments. This function will
@@ -87,8 +65,8 @@ def cli(argv):
     if len(cmd) == 0:
         raise Exception('No COMMAND specified for ttm')
     elif cmd[0] in c:
-        infile = Corpus(_open(opts['input'], 'in'))
-        outfile = _open(opts['output'], 'out')
+        infile = InputFile(opts['input'])
+        outfile = OutputFile(opts['output'])
         c[cmd[0]]._cli(argv=cmd[1:], infile=infile, outfile=outfile)
     else:
         raise Exception(f"Unknown ttm COMMAND '{cmd[0]}'")
