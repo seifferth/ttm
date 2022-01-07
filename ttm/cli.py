@@ -74,17 +74,19 @@ def cli(argv):
     if 'input' not in opts: opts['input'] = '-'
     if 'output' not in opts: opts['output'] = '-'
     # Option processing
+    c = { 'cat': cat, '20cat': c20cat, 'embed': embed, 'redim': redim,
+          'cluster': cluster, 'desc': desc, 'eval': ttm_eval }
     if 'help' in opts:
-        raise HelpRequested(_cli_help)
+        if cmd and cmd[0] in c:
+            raise HelpRequested(c[cmd[0]]._cli_help)
+        else:
+            raise HelpRequested(_cli_help)
     infile = Corpus(_open(opts['input'], 'in'))
     outfile = _open(opts['output'], 'out')
-    c = { 'cat': cat._cli, '20cat': c20cat._cli, 'embed': embed._cli,
-          'redim': redim._cli, 'cluster': cluster._cli, 'desc': desc._cli,
-          'eval': ttm_eval._cli }
     if len(cmd) == 0:
         raise Exception('No COMMAND specified for ttm')
     elif cmd[0] in c:
-        c[cmd[0]](argv=cmd[1:], infile=infile, outfile=outfile)
+        c[cmd[0]]._cli(argv=cmd[1:], infile=infile, outfile=outfile)
     else:
         raise Exception(f"Unknown ttm COMMAND '{cmd[0]}'")
 
