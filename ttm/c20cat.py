@@ -15,7 +15,8 @@ def docs():
     following format: (doc_id, n_tokens, n_chars, content)
     """
     from sklearn.datasets import fetch_20newsgroups
-    groups = fetch_20newsgroups(subset='all', shuffle=False)
+    groups = fetch_20newsgroups(subset='all', shuffle=False,
+                                remove=('headers','footers','quotes'))
     docs = ( _normalize(d) for d in groups.data )
     labels = ( groups.target_names[i] for i in groups.target )
     label_is = { label: 0 for label in groups.target_names }
