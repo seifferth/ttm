@@ -142,7 +142,7 @@ def _cli(argv, infile, outfile):
             cmd_opts, rest = getopt(rest[1:], '', ['min-df=', 'max-df='])
             cmd_opts = { k.lstrip('-').replace('-', '_'): float(v)
                          for k, v in cmd_opts }
-            for k, v in cmd_opts:
+            for k, v in cmd_opts.items():
                 if k == 'min_df' and (v < 0 or v > 1):
                     raise Exception('--min-df must lie between 0 and 1')
                 elif k == 'max_df' and (v < 0 or v > 1):
