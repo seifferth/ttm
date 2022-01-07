@@ -81,11 +81,11 @@ def cli(argv):
             raise HelpRequested(c[cmd[0]]._cli_help)
         else:
             raise HelpRequested(_cli_help)
-    infile = Corpus(_open(opts['input'], 'in'))
-    outfile = _open(opts['output'], 'out')
     if len(cmd) == 0:
         raise Exception('No COMMAND specified for ttm')
     elif cmd[0] in c:
+        infile = Corpus(_open(opts['input'], 'in'))
+        outfile = _open(opts['output'], 'out')
         c[cmd[0]]._cli(argv=cmd[1:], infile=infile, outfile=outfile)
     else:
         raise Exception(f"Unknown ttm COMMAND '{cmd[0]}'")
