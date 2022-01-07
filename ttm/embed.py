@@ -134,7 +134,7 @@ def _cli(argv, infile, outfile):
     if 'help' in opts:
         raise HelpRequested(_cli_help)
     elif len(rest) == 0:
-        raise Exception('No METHOD specified for ttm embed')
+        raise CliError('No METHOD specified for ttm embed')
     methods = []
     while len(rest) > 0:
         if rest[0] in ['bow', 'tfidf']:
@@ -144,9 +144,9 @@ def _cli(argv, infile, outfile):
                          for k, v in cmd_opts }
             for k, v in cmd_opts.items():
                 if k == 'min_df' and (v < 0 or v > 1):
-                    raise Exception('--min-df must lie between 0 and 1')
+                    raise CliError('--min-df must lie between 0 and 1')
                 elif k == 'max_df' and (v < 0 or v > 1):
-                    raise Exception('--max-df must lie between 0 and 1')
+                    raise CliError('--max-df must lie between 0 and 1')
             methods.append((cmd, cmd_opts))
         elif rest[0] == 'doc2vec':
             doc2vec_opts, rest = getopt(rest[1:], '',
@@ -169,7 +169,7 @@ def _cli(argv, infile, outfile):
             bert_opts = { k.lstrip('-'): v for k, v in bert_opts }
             methods.append((bert, bert_opts))
         else:
-            raise Exception(f"Unknown ttm embed METHOD '{rest[0]}'")
+            raise CliError(f"Unknown ttm embed METHOD '{rest[0]}'")
     embeddings = []
     for m, args in methods:
         print(f'Creating {m.__name__} embeddings', file=sys.stderr)

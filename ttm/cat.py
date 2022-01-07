@@ -85,28 +85,28 @@ def _cli(argv, infile, outfile):
         raise HelpRequested(_cli_help)
     elif len(args) != 2:
         argstring = ' '.join(args)
-        raise Exception('Unable to parse positional arguments to ttm cat: '\
-                       f"expected 'TYPE DIR' but got '{argstring}'")
+        raise CliError('Unable to parse positional arguments to ttm cat: '\
+                      f"expected 'TYPE DIR' but got '{argstring}'")
     elif not os.path.isdir(args[1]):
-        raise Exception(f"Directory '{args[1]}' not found")
+        raise CliError(f"Directory '{args[1]}' not found")
     if 'window' in opts:
         opts['window'] = int(opts['window'])
     if args[0] == 'docs':
         print('id', 'n_tokens', 'n_chars', 'content', sep='\t', file=outfile)
         for doc_id, n_tokens, n_chars, content in docs(args[1], **opts):
             if '\t' in doc_id or '\n' in doc_id:
-                raise Exception(f"Document id '{doc_id}' contains an "\
+                raise CliError(f"Document id '{doc_id}' contains an "\
                                 'invalid character (tab or newline)')
             print(doc_id, n_tokens, n_chars, content, sep='\t', file=outfile)
     elif args[0] == 'psq-pairs':
         for a, b in psq_pairs(args[1], **opts):
             if '\t' in a or '\n' in a:
-                raise Exception(f"Document id '{a}' contains an invalid"\
+                raise CliError(f"Document id '{a}' contains an invalid "\
                                 'character (tab or newline)')
             if '\t' in b or '\n' in b:
-                raise Exception(f"Document id '{b}' contains an invalid"\
+                raise CliError(f"Document id '{b}' contains an invalid "\
                                 'character (tab or newline)')
             print(a, b, sep='\t', file=outfile)
     else:
-        raise Exception("TYPE must be either 'docs' or 'psq-pairs', not "\
-                       f"'{args[0]}'")
+        raise CliError("TYPE must be either 'docs' or 'psq-pairs', not "\
+                      f"'{args[0]}'")

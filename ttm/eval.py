@@ -19,4 +19,4 @@ def _cli(argv, infile, outfile):
     opts = { short2long.get(k, k).lstrip('-'): v for k, v in opts }
     if 'help' in opts:
         raise HelpRequested(_cli_help)
-    raise Exception('ttm eval not implemented yet')
+    raise CliError('ttm eval not implemented yet')

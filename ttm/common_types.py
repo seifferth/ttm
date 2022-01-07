@@ -4,6 +4,8 @@ import sys, gzip, bz2, lzma
 
 class HelpRequested(Exception):
     pass
+class CliError(Exception):
+    pass
 
 def _open(filename, direction):
     """

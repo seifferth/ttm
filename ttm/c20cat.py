@@ -42,6 +42,6 @@ def _cli(argv, infile, outfile):
     print('id', 'n_tokens', 'n_chars', 'content', sep='\t', file=outfile)
     for doc_id, n_tokens, n_chars, content in docs():
         if '\t' in doc_id or '\n' in doc_id:
-            raise Exception(f"Document id '{doc_id}' contains an invalid "\
-                             'character (tab or newline)')
+            raise CliError(f"Document id '{doc_id}' contains an invalid "\
+                            'character (tab or newline)')
         print(doc_id, n_tokens, n_chars, content, sep='\t', file=outfile)

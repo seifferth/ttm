@@ -43,7 +43,8 @@ def cli(argv):
     not kill the python interpreter. If the user requests a help message,
     a HelpRequested Exception will be thrown. This Exception's string
     representation contains the requested help message. All other
-    Exceptions indicate errors.
+    Exceptions indicate errors. For errors related to command line
+    argument parsing and validation, the CliError class is used.
     """
     opts, cmd = getopt(argv, 'i:o:h', ['input=', 'output=', 'help'])
     short2long = { '-i': '--input', '-o': '--output', '-h': '--help' }
@@ -60,16 +61,16 @@ def cli(argv):
         elif cmd and cmd[0] in c:
             raise HelpRequested(c[cmd[0]]._cli_help)
         else:
-            raise Exception('Unable to display help message for unknown '\
-                           f"Unknown ttm COMMAND '{cmd[0]}'")
+            raise CliError('Unable to display help message for unknown '\
+                          f"Unknown ttm COMMAND '{cmd[0]}'")
     if len(cmd) == 0:
-        raise Exception('No COMMAND specified for ttm')
+        raise CliError('No COMMAND specified for ttm')
     elif cmd[0] in c:
         infile = InputFile(opts['input'])
         outfile = OutputFile(opts['output'])
         c[cmd[0]]._cli(argv=cmd[1:], infile=infile, outfile=outfile)
     else:
-        raise Exception(f"Unknown ttm COMMAND '{cmd[0]}'")
+        raise CliError(f"Unknown ttm COMMAND '{cmd[0]}'")
 
 if __name__ == "__main__":
     try:
@@ -77,9 +78,11 @@ if __name__ == "__main__":
     except HelpRequested as h:
         print(h, file=sys.stdout)
         exit(0)
+    except BrokenPipeError as e:
+        exit(0)
     except GetoptError as e:
         print(e, file=sys.stderr)
         exit(1)
-    except Exception as e:
+    except CliError as e:
         print(e, file=sys.stderr)
         exit(1)

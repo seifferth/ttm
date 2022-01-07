@@ -91,11 +91,11 @@ def _cli(argv, infile, outfile):
     if 'help' in opts:
         raise HelpRequested(_cli_help)
     elif len(args) == 0:
-        raise Exception('No METHOD specified for ttm redim')
+        raise CliError('No METHOD specified for ttm redim')
     def fail_on_rest(rest):
         if rest:
             rest = '\n'.join(rest)
-            raise Exception(f"Unsupported command line argument '{rest}'")
+            raise CliError(f"Unsupported command line argument '{rest}'")
     if args[0] == 'argmax':
         fail_on_rest(args[1:])
         method, method_args = argmax, {}
@@ -124,7 +124,7 @@ def _cli(argv, infile, outfile):
             if k in hdbscan_opts: hdbscan_opts[k] = int(hdbscan_opts[k])
         method, method_args = hdbscan, hdbscan_opts
     else:
-        raise Exception(f"Unknown ttm cluster METHOD '{args[0]}'")
+        raise CliError(f"Unknown ttm cluster METHOD '{args[0]}'")
     # Apply clustering
     lowdim = infile.column('lowdim', map_f=json.loads)
     print(f'Clustering document vectors with {method.__name__}',
