@@ -33,6 +33,10 @@ def hdbscan(vectors, metric='euclidean', cluster_selection_method='eom',
         min_cluster_size = min_cluster_size,
     ).fit(list(vectors)).labels_.tolist()
 
+def random(vectors, clusters=10):
+    from random import randint
+    return [ randint(0, clusters-1) for _ in vectors ]
+
 _cli_help="""
 Usage: ttm [OPT]... cluster [--help] METHOD [ARGS]...
 
@@ -53,6 +57,10 @@ Methods
                 in Top2Vec. Maarten Grootendorst uses almost the same
                 parameters as Angelov, but sets --min-cluster-size to
                 10 rather than 15.
+    random      Assign a random cluster id to each document. This
+                intentionally produces nonsensical clusters. It is meant
+                as a convenient way of getting a feel for how far the
+                results produced by other means differ from random noise.
 
 Arguments for aggl
     --clusters N        Number of clusters to produce
@@ -82,6 +90,9 @@ Arguments for hdbscan
                 Number of minimum documents per cluster. Clusters with less
                 than N documents are assigned to a non-cluster with id '-1'.
                 Default: 15. For more details see 'pydoc hdbscan.HDBSCAN'.
+
+Arguments for random
+    --clusters N        Number of clusters to produce.
 """.lstrip()
 
 def _cli(argv, infile, outfile):
@@ -123,6 +134,11 @@ def _cli(argv, infile, outfile):
         for k in ['min_cluster_size']:
             if k in hdbscan_opts: hdbscan_opts[k] = int(hdbscan_opts[k])
         method, method_args = hdbscan, hdbscan_opts
+    elif args[0] == 'random':
+        random_opts, rest = getopt(args[1:], '', ['clusters='])
+        fail_on_rest(rest)
+        random_opts = { k.lstrip('-'): int(v) for k, v in random_opts }
+        method, method_args = random, random_opts
     else:
         raise CliError(f"Unknown ttm cluster METHOD '{args[0]}'")
     # Apply clustering
