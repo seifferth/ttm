@@ -17,7 +17,9 @@ def _open(filename, direction):
         raise Exception("Direction must be one of 'in' or 'out', "\
                        f"not '{direction}'")
     mode = 'rt' if direction == 'in' else 'wt'
-    if filename.endswith('.gz'):
+    if filename == '-':
+        return sys.stdin if direction == 'in' else sys.stdout
+    elif filename.endswith('.gz'):
         return gzip.open(filename, mode)
     elif filename.endswith('.bz2'):
         return bz2.open(filename, mode)
@@ -33,8 +35,7 @@ class OutputFile():
     with '.gz', '.bz2', or '.xz'.
     """
     def __init__(self, filename):
-        self.file = sys.stdout if filename == '-' \
-                    else _open(filename, 'out')
+        self.file = _open(filename, 'out')
     def write(self, content):
         return self.file.write(content)
 
@@ -56,8 +57,11 @@ class InputFile():
         self.cache_complete = False
         self.filename = filename
         self.file_accessed = False
+        self.f = _open(filename, 'in')
+        self.regular_file = self.f != sys.stdin and self.f.seekable()
+        if self.regular_file: self.f.close()
     def __iter__(self):
-        if self.filename != '-':
+        if self.regular_file:
             with _open(self.filename, 'in') as f:
                 for line in f:
                     line = line.rstrip('\n').rstrip('\r')
@@ -67,7 +71,7 @@ class InputFile():
                 yield line
         elif not self.file_accessed:
             self.file_accessed = True
-            for line in sys.stdin:
+            for line in self.f:
                 line = line.rstrip('\n').rstrip('\r')
                 self.cache.append(line)
                 yield line
