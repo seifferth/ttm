@@ -4,6 +4,10 @@ from getopt import getopt
 from common_types import *
 import sys, json
 
+# math is not used directly, but it can be convenient for the 'eval'
+# function that is used with the 'random' clustering method.
+import math
+
 def argmax(vectors):
     from numpy import argmax
     return [ int(argmax(v)) for v in vectors ]
@@ -33,9 +37,15 @@ def hdbscan(vectors, metric='euclidean', cluster_selection_method='eom',
         min_cluster_size = min_cluster_size,
     ).fit(list(vectors)).labels_.tolist()
 
-def random(vectors, clusters=10):
-    from random import randint
-    return [ randint(0, clusters-1) for _ in vectors ]
+def random(vectors, clusters=10, weights=None, function=None):
+    from random import choices
+    k = 0
+    for _ in vectors:
+        k += 1
+    if weights == None: weights = [ 1 for _ in range(clusters) ]
+    if function != None:
+        weights = [ w * function(i+1) for i, w in enumerate(weights) ]
+    return choices(range(clusters), weights=weights, k=k)
 
 _cli_help="""
 Usage: ttm [OPT]... cluster [--help] METHOD [ARGS]...
@@ -93,6 +103,23 @@ Arguments for hdbscan
 
 Arguments for random
     --clusters N        Number of clusters to produce.
+    --weights WEIGHTS   The weights to use for producing the clusters,
+                        specified as a list of comma-separated floating
+                        point numbers. If both --clusters and --weights
+                        are specified, their numbers must match. If
+                        --weights is specified but --clusters is missing,
+                        the number of clusters to create will be inferred
+                        from the number of weights.
+    --function FUNC     Use FUNC to assign cluster sizes. This can be used
+                        to specify a probability distribution that differs
+                        from equally-sized clusters. FUNC is applied to
+                        natural numbers starting with 1. It is evaluated
+                        using python's 'eval' function. The number that FUNC
+                        is applied to is available as 'x'. The python math
+                        module can be accessed via that namespace (i. e. by
+                        using 'math.MATH_FUNCTION', e. g. 'math.sqrt(x)').
+                        If both --function and --weights are specified, the
+                        weights are applied on top of the function's output.
 """.lstrip()
 
 def _cli(argv, infile, outfile):
@@ -135,9 +162,26 @@ def _cli(argv, infile, outfile):
             if k in hdbscan_opts: hdbscan_opts[k] = int(hdbscan_opts[k])
         method, method_args = hdbscan, hdbscan_opts
     elif args[0] == 'random':
-        random_opts, rest = getopt(args[1:], '', ['clusters='])
+        random_opts, rest = getopt(args[1:], '',
+            ['clusters=', 'weights=', 'function='])
         fail_on_rest(rest)
-        random_opts = { k.lstrip('-'): int(v) for k, v in random_opts }
+        random_opts = { k.lstrip('-'): v for k, v in random_opts }
+        for k in ['clusters']:
+            if k in random_opts: random_opts[k] = int(random_opts[k])
+        if 'weights' in random_opts:
+            random_opts['weights'] = [ float(x.strip()) for x in
+                                       random_opts['weights'].split(',') ]
+            if 'clusters' not in random_opts:
+                random_opts['clusters'] = len(random_opts['weights'])
+            if len(random_opts['weights']) != random_opts['clusters']:
+                n_weights = len(random_opts['weights'])
+                n_clusters = random_opts['clusters']
+                raise CliError('Expected the number of weights to match the '
+                               f'number of clusters, but found {n_weights} '
+                               f'weights for {n_clusters} clusters')
+        if 'function' in random_opts:
+            random_dist_function = random_opts['function']
+            random_opts['function'] = lambda x: eval(random_dist_function)
         method, method_args = random, random_opts
     else:
         raise CliError(f"Unknown ttm cluster METHOD '{args[0]}'")
