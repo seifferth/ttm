@@ -105,3 +105,16 @@ class Column():
         i_col = next(lines).split('\t').index(self.column)
         for line in lines:
             yield self.map_f(line.split('\t')[i_col])
+
+class PsqPairs():
+    """
+    Iterable over a file in psq-pairs format. The interface is similar
+    to InputFile, but the iterator yields tuples of form (a, b) where
+    b is the page following a.
+    """
+    def __init__(self, filename):
+        self.infile = InputFile(filename)
+    def __iter__(self):
+        for line in self.infile:
+            a, b = line.split('\t')
+            yield (a, b)
