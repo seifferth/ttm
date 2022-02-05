@@ -2,7 +2,7 @@
 
 from getopt import getopt, GetoptError
 from common_types import *
-import cat, c20cat, embed, redim, cluster, desc, eval as ttm_eval
+import cat, c20cat, embed, redim, cluster, desc, comp, eval as ttm_eval
 
 _cli_help="""
 Usage: ttm [GLOBAL-OPTION]... COMMAND [COMMAND-OPTION]...
@@ -35,6 +35,8 @@ Commands
                   as 'desc'.
     eval          Evaluate topic models based on 'cluster' and 'desc'
                   columns.
+    comp          Compare two or more topic models, checking for cluster
+                  stability or instability.
 """.lstrip()
 
 def cli(argv):
@@ -54,7 +56,8 @@ def cli(argv):
     if 'output' not in opts: opts['output'] = '-'
     # Option processing
     c = { 'cat': cat, '20cat': c20cat, 'embed': embed, 'redim': redim,
-          'cluster': cluster, 'desc': desc, 'eval': ttm_eval }
+          'cluster': cluster, 'desc': desc, 'eval': ttm_eval,
+          'comp': comp }
     if 'help' in opts:
         if not cmd:
             raise HelpRequested(_cli_help)
