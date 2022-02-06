@@ -15,7 +15,7 @@ def tfidf(docs, min_df=.2, max_df=.5):
     return [ v.tolist() for v in vs.toarray() ]
 
 def doc2vec(docs, vector_size=300, min_count=50, window=15, sample=1e-5,
-            negative=0, hs=1, epochs=40, dm=0, dbow_words=1):
+            negative=0, hs=1, epochs=40, dm=0, dbow_words=1, store_model=None):
     from gensim.models.doc2vec import Doc2Vec, TaggedDocument
     from gensim.utils import simple_preprocess
     import logging
@@ -38,6 +38,7 @@ def doc2vec(docs, vector_size=300, min_count=50, window=15, sample=1e-5,
                     epochs = epochs,
                     dm = dm,
                     dbow_words = dbow_words)
+    if store_model != None: model.save(store_model)
     del logging
     vs = [ model.dv[i].tolist() for i, _ in enumerate(docs) ]
     return vs
@@ -123,6 +124,12 @@ Arguments for 'doc2vec'
     --dm N              int         default:     0
     --dbow-words N      int         default:     1
 
+    --store-model PATH
+         Store gensim's internal model representation at a given path.
+         This is not used for anything inside ttm yet, but may be used in
+         a future version. It may also be useful for inspecting the model
+         independently of ttm.
+
 Arguments for 'bert'
     --model MODEL
          Name of the pre-trained language model to use.
@@ -157,7 +164,8 @@ def _cli(argv, infile, outfile):
         elif rest[0] == 'doc2vec':
             doc2vec_opts, rest = getopt(rest[1:], '',
                     ['vector-size=', 'min-count=', 'window=', 'sample=',
-                     'negative=', 'hs=', 'epochs=', 'dm=', 'dbow-words='])
+                     'negative=', 'hs=', 'epochs=', 'dm=', 'dbow-words=',
+                     'store-model='])
             doc2vec_opts = { k.lstrip('-').replace('-', '_'): v
                              for k, v in doc2vec_opts }
             # Parse ints
