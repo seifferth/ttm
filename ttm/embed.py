@@ -114,6 +114,12 @@ Command Options
             There must be an 'id' and a 'highdim' column in the included
             FILE, and each document id found in the input file must also
             be present in the included FILE.
+    --highdim-only
+            Include only 'id' and 'highdim' columns in output. This is not
+            advisable for general use, since the 'content' column is also
+            used in later steps. It may be convenient to create standalone
+            embedding files that can later be added to a complete input file
+            via the '--include' option, however.
     -h, --help
             Print this help message and exit.
 
@@ -153,9 +159,11 @@ Arguments for 'bert'
 """.lstrip()
 
 def _cli(argv, infile, outfile):
-    all_opts, rest = getopt(argv, 'ha', ['help', 'append', 'include='])
+    all_opts, rest = getopt(argv, 'ha', ['help', 'append', 'include=',
+                            'highdim-only'])
     short2long = { '-h': '--help', '-a': '--append' }
-    opts = { short2long.get(k, k).lstrip('-'): v for k, v in all_opts }
+    opts = { short2long.get(k, k).lstrip('-').replace('-', '_'): v
+             for k, v in all_opts }
     opts['include'] = [ InputFile(v) for k, v in all_opts
                                       if k == '--include' ]
     if 'help' in opts:
@@ -210,8 +218,12 @@ def _cli(argv, infile, outfile):
     for m, args in methods:
         print(f'Creating {m.__name__} embeddings', file=sys.stderr)
         embeddings.append(m(infile.column('content'), **args))
-    input_lines = iter(infile.strip('highdim'))
-    print(f'{next(input_lines)}\t{"highdim"}', file=outfile)
+    if 'highdim_only' in opts:
+        print(f'{"id"}\t{"highdim"}', file=outfile)
+        input_lines = iter(infile.column('id'))
+    else:
+        input_lines = iter(infile.strip('highdim'))
+        print(f'{next(input_lines)}\t{"highdim"}', file=outfile)
     for i, line in enumerate(input_lines):
         v = []
         for vs in embeddings:
