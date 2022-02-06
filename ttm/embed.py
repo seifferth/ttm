@@ -71,7 +71,7 @@ def bert(docs, model='all-MiniLM-L6-v2'):
     return [ v.tolist() for v in embeddings ]
 
 _cli_help="""
-Usage: ttm [OPT]... embed [OPTION]... METHOD [ARG]... [METHOD [ARG]...]...
+Usage: ttm [OPT]... embed [COMMAND-OPTION]... [METHOD [ARG]...]...
 
 'ttm embed' takes one or more embedding methods as arguments. Each
 of those embedding methods supports a different set of arguments that
@@ -82,7 +82,10 @@ possibly specifying different arguments each time.
 
 All specified methods are individually applied to the input data. The
 resulting embeddings are then concatenated in the same order the methods
-are specified on the command line.
+are specified on the command line. Additionally, this command may be used
+to concatenate document vectors from multiple files (see the '--append'
+and '--include' options described below). If '--include' is specified,
+specifying embedding METHODs becomes optional.
 
 Methods
     bow         Create simple Bag of Words vectors.
@@ -101,7 +104,16 @@ Methods
 
 Command Options
     -a, --append
-            Append the resulting vectors to an existing 'highdim' column.
+            Append the resulting vectors to an existing 'highdim' column
+            in the input file.
+    --include FILE
+            Also append the document vectors found in the 'highdim' column
+            of FILE to the resulting vectors. This option can be specified
+            multiple times to concatenate vectors from different files. The
+            row order of the included FILE may differ from the input file.
+            There must be an 'id' and a 'highdim' column in the included
+            FILE, and each document id found in the input file must also
+            be present in the included FILE.
     -h, --help
             Print this help message and exit.
 
@@ -141,12 +153,14 @@ Arguments for 'bert'
 """.lstrip()
 
 def _cli(argv, infile, outfile):
-    opts, rest = getopt(argv, 'ha', ['help', 'append'])
+    all_opts, rest = getopt(argv, 'ha', ['help', 'append', 'include='])
     short2long = { '-h': '--help', '-a': '--append' }
-    opts = { short2long.get(k, k).lstrip('-'): v for k, v in opts }
+    opts = { short2long.get(k, k).lstrip('-'): v for k, v in all_opts }
+    opts['include'] = [ InputFile(v) for k, v in all_opts
+                                      if k == '--include' ]
     if 'help' in opts:
         raise HelpRequested(_cli_help)
-    elif len(rest) == 0:
+    elif len(rest) == 0 and len(opts['include']) == 0:
         raise CliError('No METHOD specified for ttm embed')
     methods = []
     while len(rest) > 0:
@@ -187,6 +201,12 @@ def _cli(argv, infile, outfile):
     embeddings = []
     if 'append' in opts:
         embeddings.append(list(infile.column('highdim', map_f=json.loads)))
+    for f in opts['include']:
+        f.ensure_loaded()
+        vs = { d: v for d, v in
+               zip(f.column('id'), f.column('highdim', map_f=json.loads)) }
+        embeddings.append([vs[d] for d in infile.column('id')])
+        del vs
     for m, args in methods:
         print(f'Creating {m.__name__} embeddings', file=sys.stderr)
         embeddings.append(m(infile.column('content'), **args))
