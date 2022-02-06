@@ -55,7 +55,7 @@ def pure_docs(infile, limit=5, cutoff=.5):
     return ts
 
 _cli_help="""
-Usage: ttm [OPT]... desc [OPTION]...
+Usage: ttm [OPT]... desc [COMMAND-OPTION]...
 
 Description Methods
     tfidf-words

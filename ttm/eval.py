@@ -94,7 +94,7 @@ def psq_score(psq_count, cluster_distribution) -> tuple:
     return (score, zoom)
 
 _cli_help="""
-Usage: ttm [OPT]... eval [OPTION]... FILE [FILE]...
+Usage: ttm [OPT]... eval [COMMAND-OPTION]... FILE [FILE]...
 
 'ttm eval' takes one or more file names as positional arguments.
 These files are supposed to contain a corpus processed by ttm. On

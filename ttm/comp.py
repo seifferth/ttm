@@ -65,7 +65,7 @@ def avg_kappa(*infiles: InputFile) -> float:
     return (avg_k, dev_k, avg_z, dev_z)
 
 _cli_help="""
-Usage: ttm [OPT]... comp [OPTION]... FILE FILE...
+Usage: ttm [OPT]... comp [COMMAND-OPTION]... FILE FILE...
 
 'ttm comp' takes two or more file names as positional arguments.
 These files are supposed to contain a corpus processed by ttm. On
