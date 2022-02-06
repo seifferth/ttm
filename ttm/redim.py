@@ -86,7 +86,7 @@ def _cli(argv, infile, outfile):
         raise CliError('No METHOD specified for ttm redim')
     def fail_on_rest(rest):
         if rest:
-            rest = '\n'.join(rest)
+            rest = ' '.join(rest)
             raise CliError(f"Unsupported command line argument '{rest}'")
     if args[0] == 'id':
         fail_on_rest(args[1:])
