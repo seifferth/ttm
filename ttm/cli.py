@@ -30,9 +30,8 @@ Commands
                   and store the resulting vectors as 'lowdim'.
     cluster       Cluster the vectors in 'lowdim' and store the resulting
                   cluster ids as 'cluster'.
-    desc          Create cluster descriptions based on the 'cluster' and
-                  'content' columns and store the resulting word lists
-                  as 'desc'.
+    desc          Create cluster descriptions based on the existing data and
+                  store the resulting descriptions in additional columns.
     eval          Evaluate topic models based on 'cluster' and 'desc'
                   columns.
     comp          Compare two or more topic models, checking for cluster

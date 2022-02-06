@@ -3,7 +3,9 @@
 from getopt import getopt
 from common_types import *
 
-def tfidf(docs, topics, limit=10):
+def tfidf_words(infile: InputFile, limit=10):
+    docs = infile.column('content')
+    topics = infile.column('cluster')
     import numpy as np
     from sklearn.feature_extraction.text import CountVectorizer
     # Count per document term frequencies
@@ -30,7 +32,9 @@ def tfidf(docs, topics, limit=10):
             result[t].append(token)
     return result
 
-def pure_docs(docs, topics, limit=5, cutoff=.5):
+def pure_docs(infile, limit=5, cutoff=.5):
+    docs = infile.column('id')
+    topics = infile.column('cluster')
     tcount = { t: 0 for t in topics }
     doc_ts = { doc_id.rsplit(':', 1)[0]: tcount.copy() for doc_id in docs }
     for d, t in zip(docs, topics):
@@ -51,60 +55,59 @@ def pure_docs(docs, topics, limit=5, cutoff=.5):
     return ts
 
 _cli_help="""
-Usage: ttm [OPT]... desc [--help] METHOD [ARGS]...
+Usage: ttm [OPT]... desc [OPTION]...
 
-Methods
-    tfidf       Use tfidf on document clusters to find the most important
-                terms per cluster.
-    pure-docs   Find documents that have a large part of their pages
-                assigned to a given topic.
+Description Methods
+    tfidf-words
+        Use tfidf on document clusters to find the most important terms
+        per cluster.
 
-Arguments for tfidf
-    --limit N       Include only the N most significant words for each
-                    cluster. Default: 10.
+    pure-docs
+        Find documents that have a large part of their pages assigned
+        to a given topic.
 
-Arguments for pure-docs
-    --limit N       Include only the N purest docs for each cluster.
-                    Default: 5.
-    --cutoff N      Include only docs with at least the N'th of their
-                    pages assigned to the given topic. Default: 0.5.
+Command Options
+    --tfidf-words-limit N
+                Include only the N most significant words for each cluster.
+                Default: 10.
+    --pure-docs-limit N
+                Include only the N purest docs for each cluster. Default: 5.
+    --pure-docs-cutoff N
+                Include only docs with at least the N'th of their pages
+                assigned to the given topic. Default: 0.5.
 """.lstrip()
 
 def _cli(argv, infile, outfile):
-    opts, args = getopt(argv, 'h', ['help'])
+    opts, rest = getopt(argv, 'h', ['help', 'tfidf-words-limit=',
+                        'pure-docs-limit=', 'pure-docs-cutoff='])
     short2long = { '-h': '--help' }
-    opts = { short2long.get(k, k).lstrip('-'): v for k, v in opts }
+    opts = { short2long.get(k, k).lstrip('-').replace('-', '_'): v
+             for k, v in opts }
     if 'help' in opts:
         raise HelpRequested(_cli_help)
-    elif len(args) == 0:
-        raise CliError('No METHOD specified for ttm desc')
-    def fail_on_rest(rest):
-        if rest:
-            rest = '\n'.join(rest)
-            raise CliError(f"Unsupported command line argument '{rest}'")
-    if args[0] == 'tfidf':
-        tfidf_opts, rest = getopt(args[1:], '', ['limit='])
-        fail_on_rest(rest)
-        tfidf_opts = { k.lstrip('-'): int(v) for k, v in tfidf_opts }
-        method, method_args = tfidf, tfidf_opts
-        docs = infile.column('content')
-    elif args[0] == 'pure-docs':
-        pure_docs_opts, rest = getopt(args[1:], '', ['limit=', 'cutoff='])
-        fail_on_rest(rest)
-        pure_docs_opts = { k.lstrip('-'): v for k, v in pure_docs_opts }
-        for k in ['limit']:
-            if k in pure_docs_opts:
-                pure_docs_opts[k] = int(pure_docs_opts[k])
-        for k in ['cutoff']:
-            if k in pure_docs_opts:
-                pure_docs_opts[k] = float(pure_docs_opts[k])
-        method, method_args = pure_docs, pure_docs_opts
-        docs = infile.column('id')
-    # Create topic descriptions
-    topics = infile.column('cluster')
-    topic_desc = method(docs, topics, **method_args)
-    # Copy result into outfile
-    input_lines = iter(infile.strip('desc'))
-    print(f'{next(input_lines)}\t{"desc"}', file=outfile)
-    for line, cluster in zip(input_lines, topics):
-        print(f'{line}\t{", ".join(topic_desc[cluster])}', file=outfile)
+    elif len(rest) > 0:
+        rest = ' '.join(rest)
+        raise CliError(f"Unsupported command line argument '{rest}'")
+    tfidf_words_opts = dict()
+    for k, v in opts.items():
+        if k.startswith('tfidf_words_'):
+            k = k.replace('tfidf_words_', '')
+            if k == 'limit': v = int(v)
+            tfidf_words_opts[k] = v
+    pure_docs_opts = dict()
+    for k, v in opts.items():
+        if k.startswith('pure_docs_'):
+            k = k.replace('pure_docs_', '')
+            if k == 'limit': v = int(v)
+            if k == 'cutoff': v = float(v)
+            pure_docs_opts[k] = v
+    desc = dict()
+    desc['tfidf_words'] = tfidf_words(infile, **tfidf_words_opts)
+    desc['pure_docs'] = pure_docs(infile, **pure_docs_opts)
+    input_lines = iter(infile)
+    desc_headers = '\t'.join(desc.keys())
+    print(f'{next(input_lines)}\t{desc_headers}', file=outfile)
+    for line, cluster in zip(input_lines, infile.column('cluster')):
+        topic_descs = [ ', '.join(desc[method][cluster]) for method in desc ]
+        topic_descs = '\t'.join(topic_descs)
+        print(f'{line}\t{topic_descs}', file=outfile)

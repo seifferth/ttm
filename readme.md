@@ -30,7 +30,7 @@ example pipeline could look like this:
         ttm embed doc2vec |
         ttm redim umap |
         ttm cluster hdbscan |
-        ttm desc tfidf > result.tsv
+        ttm desc > result.tsv
 
 `corpus_dir` is assumed to be a directory containing one or more plain
 text files with somewhat sensible file names. Each of these files will be
