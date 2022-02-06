@@ -191,7 +191,7 @@ def _cli(argv, infile, outfile):
           file=sys.stderr)
     cluster = method(lowdim, **method_args)
     # Copy result into outfile
-    input_lines = iter(infile)
+    input_lines = iter(infile.strip('cluster'))
     print(f'{next(input_lines)}\t{"cluster"}', file=outfile)
     for i, line in enumerate(input_lines):
         print(f'{line}\t{cluster[i]}', file=outfile)

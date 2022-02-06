@@ -70,7 +70,7 @@ def bert(docs, model='all-MiniLM-L6-v2'):
     return [ v.tolist() for v in embeddings ]
 
 _cli_help="""
-Usage: ttm [OPT]... embed [--help] METHOD [ARG]... [METHOD [ARG]...]...
+Usage: ttm [OPT]... embed [OPTION]... METHOD [ARG]... [METHOD [ARG]...]...
 
 'ttm embed' takes one or more embedding methods as arguments. Each
 of those embedding methods supports a different set of arguments that
@@ -97,6 +97,12 @@ Methods
     bert        Create BERT embeddings using the sentence_transformers
                 package. These embeddings are also used by Maarten
                 Grootendorst's BERTopic.
+
+Command Options
+    -a, --append
+            Append the resulting vectors to an existing 'highdim' column.
+    -h, --help
+            Print this help message and exit.
 
 Arguments for 'bow' and 'tfidf'
     --min-df N      Ignore tokens that appear in less than N documents.
@@ -128,8 +134,8 @@ Arguments for 'bert'
 """.lstrip()
 
 def _cli(argv, infile, outfile):
-    opts, rest = getopt(argv, 'h', ['help'])
-    short2long = { '-h': '--help' }
+    opts, rest = getopt(argv, 'ha', ['help', 'append'])
+    short2long = { '-h': '--help', '-a': '--append' }
     opts = { short2long.get(k, k).lstrip('-'): v for k, v in opts }
     if 'help' in opts:
         raise HelpRequested(_cli_help)
@@ -171,10 +177,12 @@ def _cli(argv, infile, outfile):
         else:
             raise CliError(f"Unknown ttm embed METHOD '{rest[0]}'")
     embeddings = []
+    if 'append' in opts:
+        embeddings.append(list(infile.column('highdim', map_f=json.loads)))
     for m, args in methods:
         print(f'Creating {m.__name__} embeddings', file=sys.stderr)
         embeddings.append(m(infile.column('content'), **args))
-    input_lines = iter(infile)
+    input_lines = iter(infile.strip('highdim'))
     print(f'{next(input_lines)}\t{"highdim"}', file=outfile)
     for i, line in enumerate(input_lines):
         v = []

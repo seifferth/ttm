@@ -64,7 +64,7 @@ def _cli(argv, infile, outfile):
     topics = infile.column('cluster')
     topic_desc = method(docs, topics, **method_args)
     # Copy result into outfile
-    input_lines = iter(infile)
+    input_lines = iter(infile.strip('desc'))
     print(f'{next(input_lines)}\t{"desc"}', file=outfile)
     for line, cluster in zip(input_lines, topics):
         print(f'{line}\t{", ".join(topic_desc[cluster])}', file=outfile)

@@ -122,7 +122,7 @@ def _cli(argv, infile, outfile):
           file=sys.stderr)
     lowdim = method(highdim, **method_args)
     # Copy result into outfile
-    input_lines = iter(infile)
+    input_lines = iter(infile.strip('lowdim'))
     print(f'{next(input_lines)}\t{"lowdim"}', file=outfile)
     for i, line in enumerate(input_lines):
         print(f'{line}\t{json.dumps(lowdim[i])}', file=outfile)

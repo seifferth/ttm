@@ -49,10 +49,7 @@ def psq_count(infile: InputFile, psq_pairs: PsqPairs) -> float:
     """
     n_matches = 0
     n_pairs = 0
-    # Prevent partically cached non-seekable infiles that would make
-    # InputFile throw an exception when zipping columns.
-    if not infile.regular_file and not infile.cache_complete:
-        list(infile.column('cluster'))
+    infile.ensure_loaded()
     doc2cluster = { d: c for d, c in
                     zip(infile.column('id'), infile.column('cluster')) }
     for a, b in psq_pairs:

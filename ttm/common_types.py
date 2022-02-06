@@ -39,17 +39,17 @@ class OutputFile():
     def write(self, content):
         return self.file.write(content)
 
-class InputFile():
+class CachingFileReader():
     """
-    Iterable over all lines in a corpus tsv file. This class works both
-    for files stored on disk and for stdandard input (filename -). If
-    the corpus is read from stdin, each line will be recorded in an
-    in-memory cache when first seen, and played back from that cache for
-    further iterations. Note that this causes the entire corpus to live
-    in memory, which could cause problems with large corpora. If memory
-    usage is an issue, make sure to load the corpus from disk.
+    Iterable over all lines in a file. This class works both for files
+    stored on disk and for stdandard input (filename -). If the corpus
+    is read from stdin, each line will be recorded in an in-memory
+    cache when first seen, and played back from that cache for further
+    iterations. Note that this causes the entire corpus to live in memory,
+    which could cause problems with large corpora. If memory usage is
+    an issue, make sure to load files from disk.
 
-    InputFile is smart about filenames and performs on-the-fly data
+    CachingFileReader is smart about filenames and performs on-the-fly data
     decompression if the filename ends with '.gz', '.bz2', or '.xz'.
     """
     def __init__(self, filename):
@@ -79,6 +79,45 @@ class InputFile():
         else:
             raise Exception('Second iteration over input started before '\
                             'cache was fully populated during first one')
+    def ensure_loaded(self):
+        if not self.regular_file and not self.cache_complete:
+            for _ in self:
+                pass
+
+class InputFile():
+    """
+    Iterable over all lines in a tsv file. If strip_columns (list of strings)
+    is specified to the constructor, those columns will be excluded from the
+    iterator.
+    """
+    def __init__(self, filename, strip_columns=[], file_reader=None):
+        if file_reader != None:
+            self.file_reader = file_reader
+        else:
+            self.file_reader = CachingFileReader(filename)
+        self.strip_columns = strip_columns
+    def __iter__(self):
+        if not self.strip_columns:
+            for line in self.file_reader:
+                yield line
+        else:
+            lines = iter(self.file_reader)
+            header = next(lines).split('\t')
+            yield '\t'.join([ header[i] for i in range(len(header))
+                              if header[i] not in self.strip_columns ])
+            for line in lines:
+                line = line.split('\t')
+                yield '\t'.join([ line[i] for i in range(len(line))
+                                  if header[i] not in self.strip_columns ])
+    def ensure_loaded(self):
+        self.file_reader.ensure_loaded()
+    def strip(self, column: str):
+        """
+        Return a new InputFile with a single column removed.
+        """
+        return InputFile(filename = self.file_reader.filename,
+                         file_reader = self.file_reader,
+                         strip_columns = [ column ] + self.strip_columns)
     def column(self, column: str, map_f=lambda x: x):
         """
         Return an iterable over the contents found in a specified column
@@ -113,8 +152,8 @@ class PsqPairs():
     b is the page following a.
     """
     def __init__(self, filename):
-        self.infile = InputFile(filename)
+        self.file_reader = CachingFileReader(filename)
     def __iter__(self):
-        for line in self.infile:
+        for line in self.file_reader:
             a, b = line.split('\t')
             yield (a, b)
