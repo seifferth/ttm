@@ -3,13 +3,13 @@
 from getopt import getopt
 from common_types import *
 
-def tfidf_words(infile: InputFile, limit=10):
+def tfidf_words(infile: InputFile, limit=10, min_df=.1, max_df=1.):
     docs = infile.column('content')
     topics = infile.column('cluster')
     import numpy as np
     from sklearn.feature_extraction.text import CountVectorizer
     # Count per document term frequencies
-    count = CountVectorizer().fit(docs)
+    count = CountVectorizer(min_df=min_df, max_df=max_df).fit(docs)
     docs = count.transform(docs)
     # Join per document term frequencies into per topic term frequencies
     topic2id = { t: i for i, t in enumerate(set(topics)) }
@@ -70,15 +70,25 @@ Command Options
     --tfidf-words-limit N
                 Include only the N most significant words for each cluster.
                 Default: 10.
+    --tfidf-words-min-df N
+                Only consider words that appear on at least N pages. N
+                is a percentage of pages and must lie between 0 and 1.
+                Default: 0.1.
+    --tfidf-words-max-df N
+                Only consider words that appear up to N pages. N is
+                a percentage of pages and must lie between 0 and 1.
+                Default: 1.
     --pure-docs-limit N
                 Include only the N purest docs for each cluster. Default: 5.
     --pure-docs-cutoff N
-                Include only docs with at least the N'th of their pages
-                assigned to the given topic. Default: 0.5.
+                Only include docs with at least N of their pages assigned
+                to a given topic. N is a percentage of pages and must lie
+                between 0 and 1. Default: 0.5.
 """.lstrip()
 
 def _cli(argv, infile, outfile):
     opts, rest = getopt(argv, 'h', ['help', 'tfidf-words-limit=',
+                        'tfidf-words-min-df=', 'tfidf-words-max-df=',
                         'pure-docs-limit=', 'pure-docs-cutoff='])
     short2long = { '-h': '--help' }
     opts = { short2long.get(k, k).lstrip('-').replace('-', '_'): v
@@ -93,6 +103,8 @@ def _cli(argv, infile, outfile):
         if k.startswith('tfidf_words_'):
             k = k.replace('tfidf_words_', '')
             if k == 'limit': v = int(v)
+            if k == 'min_df': v = float(v)
+            if k == 'max_df': v = float(v)
             tfidf_words_opts[k] = v
     pure_docs_opts = dict()
     for k, v in opts.items():
