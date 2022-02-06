@@ -51,9 +51,6 @@ def cli(argv):
     opts, cmd = getopt(argv, 'i:o:h', ['input=', 'output=', 'help'])
     short2long = { '-i': '--input', '-o': '--output', '-h': '--help' }
     opts = { short2long.get(k, k).lstrip('-'): v for k, v in opts }
-    # Default values
-    if 'input' not in opts: opts['input'] = '-'
-    if 'output' not in opts: opts['output'] = '-'
     # Option processing
     c = { 'cat': cat, '20cat': c20cat, 'embed': embed, 'redim': redim,
           'cluster': cluster, 'desc': desc, 'eval': ttm_eval,
@@ -69,8 +66,18 @@ def cli(argv):
     if len(cmd) == 0:
         raise CliError('No COMMAND specified for ttm')
     elif cmd[0] in c:
-        infile = InputFile(opts['input'])
-        outfile = OutputFile(opts['output'])
+        if cmd[0] in ['embed', 'redim', 'cluster', 'desc']:
+            infile = InputFile(opts.get('input', '-'))
+        elif 'input' in opts:
+            raise CliError(f'ttm {cmd[0]} does accept the --input switch')
+        else:
+            infile = None
+        if cmd[0] in ['cat', '20cat', 'embed', 'redim', 'cluster', 'desc']:
+            outfile = OutputFile(opts.get('output', '-'))
+        elif 'output' in opts:
+            raise CliError(f'ttm {cmd[0]} does accept the --output switch')
+        else:
+            outfile = None
         c[cmd[0]]._cli(argv=cmd[1:], infile=infile, outfile=outfile)
     else:
         raise CliError(f"Unknown ttm COMMAND '{cmd[0]}'")
