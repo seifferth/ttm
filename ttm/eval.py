@@ -145,7 +145,8 @@ Evaluation Metrics
         interpreting this metric, but high zoom values indicate a large
         variation in cluster sizes. As a rule of thumb, a zoom above 3
         may be considered suspicious and should be investigated further
-        by taking a closer look at the cluster-distribution.
+        by taking a closer look at the cluster-distribution. For further
+        information see 'pydoc ttm.eval.psq_score'.
 
 Command Options
     -f FORMAT, --format FORMAT
