@@ -65,13 +65,15 @@ free memory during training when invoked with this switch. As a result,
 use of the `-i` and `-o` options should be preferred to input and output
 redirection when working with large corpora.
 
-## Installing
+## Usage
 
-The examples given above all refer to a single `ttm` command. This command
-is provided by the executable `ttm/cli.py` script. It is advised to create
-a symlink to this file from some directory included in the user's `PATH`
-and to name this symlink `ttm`. Furthermore, the following python modules
-need to be installed on the system for `ttm` to work:
+The `ttm` command referred to above is not included in the repository at
+the moment. It is supposed to be an alias for `python3 -m ttm`.
+
+## Dependencies
+
+The following python modules need to be installed on the system for
+`ttm` to work.
 
 - sklearn
 - gensim

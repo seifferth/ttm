@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 from getopt import getopt, GetoptError
-from common_types import *
-import cat, c20cat, embed, redim, cluster, desc, comp, eval as ttm_eval
+from .types import *
+from . import cat, c20cat, embed, redim, cluster, desc, comp
+from . import eval as ttm_eval
 
 _cli_help="""
 Usage: ttm [GLOBAL-OPTION]... COMMAND [COMMAND-OPTION]...
@@ -81,17 +82,17 @@ def cli(argv):
     else:
         raise CliError(f"Unknown ttm COMMAND '{cmd[0]}'")
 
-if __name__ == "__main__":
+def main() -> int:
     try:
         cli(sys.argv[1:])
     except HelpRequested as h:
         print(h, file=sys.stdout)
-        exit(0)
+        return 0
     except BrokenPipeError as e:
-        exit(0)
+        return 0
     except GetoptError as e:
         print(e, file=sys.stderr)
-        exit(1)
+        return 1
     except CliError as e:
         print(e, file=sys.stderr)
-        exit(1)
+        return 1

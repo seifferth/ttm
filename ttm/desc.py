@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from getopt import getopt
-from common_types import *
+from .types import *
 
 def tfidf_words(infile: InputFile, limit=10, min_df=5):
     docs = infile.column('content')

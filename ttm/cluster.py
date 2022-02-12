@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from getopt import getopt
-from common_types import *
+from .types import *
 import sys, json
 
 # math is not used directly, but it can be convenient for the 'eval'

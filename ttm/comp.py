@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 from getopt import getopt
-from common_types import *
-from eval import cluster_distribution, bucket_probability
+from .types import *
+from .eval import cluster_distribution, bucket_probability
 from itertools import combinations
 
 def _cluster2doc(f: InputFile) -> dict:

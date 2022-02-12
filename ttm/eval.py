@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from getopt import getopt
-from common_types import *
+from .types import *
 import json
 
 def extract_X_y(infile: InputFile) -> tuple:

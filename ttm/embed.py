@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from getopt import getopt
-from common_types import *
+from .types import *
 import sys, json
 
 def bow(docs, min_df=.2, max_df=.5):
