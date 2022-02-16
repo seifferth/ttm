@@ -96,3 +96,6 @@ def main() -> int:
     except CliError as e:
         print(e, file=sys.stderr)
         return 1
+    except ExpectedRuntimeError as e:
+        print('Error:', e, file=sys.stderr)
+        return 1

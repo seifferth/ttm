@@ -6,6 +6,8 @@ class HelpRequested(Exception):
     pass
 class CliError(Exception):
     pass
+class ExpectedRuntimeError(Exception):
+    pass
 
 def _open(filename, direction):
     """
@@ -102,7 +104,10 @@ class InputFile():
                 yield line
         else:
             lines = iter(self.file_reader)
-            header = next(lines).split('\t')
+            try:
+                header = next(lines).split('\t')
+            except StopIteration as e:
+                raise ExpectedRuntimeError('Input file is empty') from e
             yield '\t'.join([ header[i] for i in range(len(header))
                               if header[i] not in self.strip_columns ])
             for line in lines:
@@ -141,7 +146,10 @@ class Column():
         self.map_f = map_f
     def __iter__(self):
         lines = iter(self.corpus)
-        i_col = next(lines).split('\t').index(self.column)
+        try:
+            i_col = next(lines).split('\t').index(self.column)
+        except StopIteration as e:
+            raise ExpectedRuntimeError('Input file is empty') from e
         for line in lines:
             yield self.map_f(line.split('\t')[i_col])
 
