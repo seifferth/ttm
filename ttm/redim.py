@@ -10,13 +10,15 @@ def id(vectors):
 def umap(vectors, components=5, neighbors=15, metric='cosine',
                   min_dist=.1):
     from umap import UMAP
-    model = UMAP(
+    print(f'Applying UMAP ...', end='', file=sys.stderr, flush=True)
+    result = UMAP(
         n_neighbors = neighbors,
         n_components = components,
         metric = metric,
         min_dist = min_dist,
     ).fit(vectors.matrix())
-    return model.embedding_.tolist()
+    print(' done', end='\n', file=sys.stderr, flush=True)
+    return result.embedding_.tolist()
 
 def lda(vectors, components=5, max_epochs=10, shift=False):
     from sklearn.decomposition import LatentDirichletAllocation
@@ -35,17 +37,23 @@ def lda(vectors, components=5, max_epochs=10, shift=False):
                 for r in range(rows):
                     matrix[r,c] -= colmin
         print(' done', end='\n', file=sys.stderr, flush=True)
-    return LatentDirichletAllocation(
+    print(f'Applying LDA ...', end='', file=sys.stderr, flush=True)
+    result = LatentDirichletAllocation(
             max_iter=max_epochs,
             n_components=components,
-        ).fit_transform(matrix).tolist()
+        ).fit_transform(matrix)
+    print(' done', end='\n', file=sys.stderr, flush=True)
+    return result.tolist()
 
 def svd(vectors, components=5):
     from sklearn.decomposition import TruncatedSVD
-    return TruncatedSVD(
+    print(f'Applying SVD ...', end='', file=sys.stderr, flush=True)
+    result = TruncatedSVD(
             n_components = 5,
             algorithm = 'arpack',   # Should produce deterministic results
-        ).fit_transform(vectors.matrix(dtype=float)).tolist()
+        ).fit_transform(vectors.matrix(dtype=float))
+    print(' done', end='\n', file=sys.stderr, flush=True)
+    return result.tolist()
 
 _cli_help="""
 Usage: ttm [OPT]... redim [--help] METHOD [ARG]...
@@ -146,8 +154,6 @@ def _cli(argv, infile, outfile):
         raise CliError(f"Unknown ttm redim METHOD '{args[0]}'")
     # Apply dimensionality reduction
     highdim = infile.column('highdim', map_f=json.loads)
-    print(f'Applying {method.__name__} for dimensionality reduction',
-          file=sys.stderr)
     lowdim = method(highdim, **method_args)
     # Copy result into outfile
     input_lines = iter(infile.strip('lowdim'))
