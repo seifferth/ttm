@@ -77,6 +77,6 @@ The following python modules need to be installed on the system for
 
 - sklearn
 - gensim
-- sentence_transformers
+- flair
 - umap-learn
 - hdbscan

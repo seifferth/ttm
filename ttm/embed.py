@@ -43,32 +43,29 @@ def doc2vec(docs, vector_size=300, min_count=50, window=15, sample=1e-5,
     vs = [ model.dv[i].tolist() for i, _ in enumerate(docs) ]
     return vs
 
-def bert(docs, model='all-MiniLM-L6-v2'):
-    """
-    Produce BERT sentence transformer embeddings using the same default
-    configuration as Maarten Grootendorst does with BERTopic.
-    """
-    from sentence_transformers import SentenceTransformer
-    print(f"[bert] Loading model '{model}'", file=sys.stderr)
-    embedding_model = SentenceTransformer(model)
-    dociter = iter(docs)
-    embeddings = []
-    batch = 0
-    while True:
-        batch += 1
-        docs = []
-        for i in range(1000):
-            try:
-                docs.append(next(dociter))
-            except StopIteration:
-                break
-        if len(docs) == 0: break
-        print(f'[bert] Embedding batch {batch} with {len(docs)} docs',
-              file=sys.stderr)
-        embeddings.extend(
-            embedding_model.encode(docs, show_progress_bar=True)
-        )
-    return [ v.tolist() for v in embeddings ]
+def sbert(docs, model='all-MiniLM-L6-v2'):
+    from flair.data import Sentence
+    from flair.embeddings import SentenceTransformerDocumentEmbeddings
+    model = SentenceTransformerDocumentEmbeddings(model)
+    vs = []
+    for i, d in enumerate(docs, 1):
+        print(f'\rEmbedding document {i}', end='', file=sys.stderr)
+        s = Sentence(d); model.embed(s); v = s.get_embedding().tolist()
+        vs.append(v)
+    print(file=sys.stderr)
+    return vs
+
+def bert(docs, model='bert-base-uncased'):
+    from flair.data import Sentence
+    from flair.embeddings import TransformerDocumentEmbeddings
+    model = TransformerDocumentEmbeddings(model)
+    vs = []
+    for i, d in enumerate(docs, 1):
+        print(f'\rEmbedding document {i}', end='', file=sys.stderr)
+        s = Sentence(d); model.embed(s); v = s.get_embedding().tolist()
+        vs.append(v)
+    print(file=sys.stderr)
+    return vs
 
 _cli_help="""
 Usage: ttm [OPT]... embed [COMMAND-OPTION]... [METHOD [ARG]...]...
@@ -98,9 +95,11 @@ Methods
                 are mostly the same, with 'epochs' set to 400 rather
                 than 40. Top2Vec's 'fast-learn' uses 40 epochs, an 'hs'
                 setting of 1 and a 'negative' setting of 5.
-    bert        Create BERT embeddings using the sentence_transformers
-                package. These embeddings are also used by Maarten
-                Grootendorst's BERTopic.
+    bert        Create transformer embeddings using the flair wrapper around
+                pretrained models from huggingface.co.
+    sbert       Create Sentence BERT embeddings using the flair wrapper
+                around the sentence_transformers package. These embeddings
+                are also used by Maarten Grootendorst's BERTopic.
 
 Command Options
     -a, --append
@@ -149,6 +148,12 @@ Arguments for 'doc2vec'
          independently of ttm.
 
 Arguments for 'bert'
+    --model MODEL
+        Name of the pre-trained language model to use. The default MODEL
+        is 'bert-base-uncased'. A complete list of supported models is
+        available at https://huggingface.co/models.
+
+Arguments for 'sbert'
     --model MODEL
          Name of the pre-trained language model to use.
          The default MODEL is 'all-MiniLM-L6-v2'. Detailed
@@ -204,6 +209,10 @@ def _cli(argv, infile, outfile):
             bert_opts, rest = getopt(rest[1:], '', ['model='])
             bert_opts = { k.lstrip('-'): v for k, v in bert_opts }
             methods.append((bert, bert_opts))
+        elif rest[0] == 'sbert':
+            sbert_opts, rest = getopt(rest[1:], '', ['model='])
+            sbert_opts = { k.lstrip('-'): v for k, v in sbert_opts }
+            methods.append((sbert, sbert_opts))
         else:
             raise CliError(f"Unknown ttm embed METHOD '{rest[0]}'")
     embeddings = []
