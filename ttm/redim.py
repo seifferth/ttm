@@ -18,12 +18,27 @@ def umap(vectors, components=5, neighbors=15, metric='cosine',
     ).fit(vectors.matrix())
     return model.embedding_.tolist()
 
-def lda(vectors, components=5, max_epochs=10):
+def lda(vectors, components=5, max_epochs=10, shift=False):
     from sklearn.decomposition import LatentDirichletAllocation
+    import numpy as np
+    matrix = vectors.matrix()
+    if shift:
+        rows, cols = matrix.shape
+        for c in range(cols):
+            colmin = matrix[:,c].min()
+            if colmin >= 0:
+                print(f'\rSkipping column {c+1}/{cols} ...',
+                      end='', file=sys.stderr, flush=True)
+            else:
+                print(f'\rShifting column {c+1}/{cols} ...',
+                      end='', file=sys.stderr, flush=True)
+                for r in range(rows):
+                    matrix[r,c] -= colmin
+        print(' done', end='\n', file=sys.stderr, flush=True)
     return LatentDirichletAllocation(
             max_iter=max_epochs,
             n_components=components,
-        ).fit_transform(vectors.matrix()).tolist()
+        ).fit_transform(matrix).tolist()
 
 def svd(vectors, components=5):
     from sklearn.decomposition import TruncatedSVD
@@ -60,6 +75,15 @@ Arguments for 'lda'
     --components N      Number of dimensions in the 'lowdim' vector.
                         Default: 5.
     --max-epochs N      Maximum number of training epochs. Default: 10.
+    --shift             LDA only works for inputs that do not contain
+                        negative entries. Since many embedding methods
+                        produce negative values in some vectors, such
+                        vectors need to be adjusted to serve as input
+                        to LDA. If --shift is specified, every column in
+                        the input data that contains negative numbers is
+                        shifted upwards, so that the lowest entry has a
+                        value of zero. All entries in any given column
+                        are shifted upwards by the same amount.
 
 Arguments for 'umap'
     --components N      Number of dimensions in the 'lowdim' vector.
@@ -98,10 +122,14 @@ def _cli(argv, infile, outfile):
         method, method_args = svd, svd_opts
     elif args[0] == 'lda':
         lda_opts, rest = getopt(args[1:], '', ['components=',
-                                'max-epochs='])
+                                'max-epochs=', 'shift'])
         fail_on_rest(rest)
-        lda_opts = { k.lstrip('-').replace('-', '_'): int(v)
+        lda_opts = { k.lstrip('-').replace('-', '_'): v
                      for k, v in lda_opts }
+        for k in ['components', 'max_epochs']:
+            if k in lda_opts: lda_opts[k] = int(v)
+        for k in ['shift']:
+            if k in lda_opts: lda_opts[k] = True
         method, method_args = lda, lda_opts
     elif args[0] == 'umap':
         umap_opts, rest = getopt(args[1:], '', ['components=',
