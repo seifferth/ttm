@@ -10,7 +10,7 @@ import math
 
 def argmax(vectors):
     from numpy import argmax
-    return [ int(argmax(v)) for v in vectors ]
+    return ( int(argmax(v)) for v in vectors )
 
 def aggl(vectors, clusters=10, affinity='euclidean', linkage='ward'):
     from sklearn.cluster import AgglomerativeClustering
@@ -193,5 +193,5 @@ def _cli(argv, infile, outfile):
     # Copy result into outfile
     input_lines = iter(infile.strip('cluster'))
     print(f'{next(input_lines)}\t{"cluster"}', file=outfile)
-    for i, line in enumerate(input_lines):
-        print(f'{line}\t{cluster[i]}', file=outfile)
+    for line, cluster_id in zip(input_lines, cluster):
+        print(f'{line}\t{cluster_id}', file=outfile)
