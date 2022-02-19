@@ -1,4 +1,4 @@
-# ttm --- Tsv-based Topic Modelling CLI
+# ttm – Tsv-based Topic Modelling CLI
 
 This repository contains some scripts which wrap selected pieces from
 a number of python libraries in order to provide a somewhat consistent
