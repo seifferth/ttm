@@ -65,21 +65,50 @@ free memory during training when invoked with this switch. As a result,
 use of the `-i` and `-o` options should be preferred to input and output
 redirection when working with large corpora.
 
-## Usage
+## Installing
 
-The `ttm` command referred to above is not included in the repository at
-the moment. It is supposed to be an alias for `python3 -m ttm`.
+This project uses python setuptools and can be installed with pip. To
+install ttm into the current user's home directory, for instance, one
+can simply invoke `python3 -m pip install --user .`. After installation,
+the program is available both as `ttm` and as `python3 -m ttm`. Invoking
+it as `python3 -m ttm` also works without installing and may be convenient
+during development.
 
-## Dependencies
+The wrapped python modules are imported inside of the functions using
+them, rather than globally. This allows to use ttm with a subset of
+dependencies (and a corresponding subset of functionality, of course).
+To install ttm with partial dependencies, one would add the `--no-deps`
+flag to the pip invocation. Afterwards, one would manually install the
+global dependencies and a selection of functional dependencies.
 
-The following python modules need to be installed on the system for
-`ttm` to work.
+### Global dependencies
 
-- sklearn
-- gensim
-- flair
-- umap-learn
-- hdbscan
-- tqdm
+The following python packages are required for ttm to run (even if it
+just displays help messages):
+
 - numpy
 - scipy
+- tqdm
+
+### Functional dependencies
+
+The following python packages are required for ttm's main functionality,
+but may be overlooked if the specific functionality they introduce is
+not used:
+
+- sklearn (used in ttm.embed.bow, ttm.embed.tfidf, ttm.redim.lda,
+  ttm.redim.svd, ttm.cluster.aggl, ttm.cluster.kmeans, ttm.desc, ttm.eval)
+- gensim (used in ttm.embed.doc2vec)
+- flair (used in ttm.embed.bert, ttm.embed.sbert, ttm.embed.pool)
+- umap-learn (used in ttm.redim.umap)
+- hdbscan (used in ttm.cluster.hdbscan)
+
+Since these dependencies are still required for ttm's basic functionality
+to be available, they are installed by default. Use the `--no-deps` option
+during installation to skip them.
+
+## License
+
+All files in this repository are made available under the terms of the
+GNU General Purpose License, version 3 or later. A copy of that license
+is included in the repository as `license.txt`.
