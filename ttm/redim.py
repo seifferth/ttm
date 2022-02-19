@@ -5,7 +5,7 @@ from .types import *
 import sys, json
 
 def id(vectors):
-    return list(vectors)
+    return vectors
 
 def umap(vectors, components=5, neighbors=15, metric='cosine',
                   min_dist=.1):
@@ -15,7 +15,7 @@ def umap(vectors, components=5, neighbors=15, metric='cosine',
         n_components = components,
         metric = metric,
         min_dist = min_dist,
-    ).fit(list(vectors))
+    ).fit(vectors.matrix())
     return model.embedding_.tolist()
 
 def lda(vectors, components=5, max_epochs=10):
@@ -23,14 +23,14 @@ def lda(vectors, components=5, max_epochs=10):
     return LatentDirichletAllocation(
             max_iter=max_epochs,
             n_components=components,
-        ).fit_transform(list(vectors)).tolist()
+        ).fit_transform(vectors.matrix()).tolist()
 
 def svd(vectors, components=5):
     from sklearn.decomposition import TruncatedSVD
     return TruncatedSVD(
             n_components = 5,
             algorithm = 'arpack',   # Should produce deterministic results
-        ).fit_transform(list(vectors)).tolist()
+        ).fit_transform(vectors.matrix(dtype=float)).tolist()
 
 _cli_help="""
 Usage: ttm [OPT]... redim [--help] METHOD [ARG]...
@@ -124,5 +124,5 @@ def _cli(argv, infile, outfile):
     # Copy result into outfile
     input_lines = iter(infile.strip('lowdim'))
     print(f'{next(input_lines)}\t{"lowdim"}', file=outfile)
-    for i, line in enumerate(input_lines):
-        print(f'{line}\t{json.dumps(lowdim[i])}', file=outfile)
+    for line, v in zip(input_lines, lowdim):
+        print(f'{line}\t{json.dumps(v)}', file=outfile)

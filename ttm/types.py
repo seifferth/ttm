@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 import sys, gzip, bz2, lzma
+import numpy as np
+from scipy.sparse import csr_matrix
 
 class HelpRequested(Exception):
     pass
@@ -158,6 +160,52 @@ class Column():
             yield self.map_f(line.split('\t')[i_col])
     def __len__(self):
         return len(self.corpus) - 1
+    def ensure_loaded(self):
+        self.corpus.ensure_loaded()
+    def peek(self):
+        """Return the first row from this column"""
+        self.ensure_loaded()
+        return next(iter(self))
+    def matrix(self, dtype=None):
+        """
+        Return the data either as a scipy.sparse.csr_matrix or as a
+        numpy.ndarray, depending on how dense the first few rows of
+        the data appear to be.
+        """
+        self.ensure_loaded()
+        entries, zeros = 0, 0
+        for _, row in zip(range(10), self):
+            entries += len(row)
+            zeros   += sum((1 for cell in row if cell == 0))
+        return self.sparse_matrix(dtype=dtype) if zeros/entries > .5 else \
+               self.dense_matrix(dtype=dtype)
+    def dense_matrix(self, dtype=None):
+        """
+        Return the data as a numpy.ndarray. Note that this only works if
+        map_f deserializes the data to a numerical format supported by
+        numpy. Lists of ints or floats work fine, for instance.
+        """
+        n_rows, n_cols = len(self), len(self.peek())
+        if dtype == None: dtype = type(self.peek()[0])
+        m = np.ndarray((n_rows, n_cols), dtype=dtype)
+        for i, v in enumerate(iter(self)):
+            m[i] = v
+        return m
+    def sparse_matrix(self, dtype=None):
+        """
+        Return the data as a scipy.sparse.csr_matrix. Note that this only
+        works if map_f deserializes the data to a numerical format supported
+        by scipy. Lists of ints or floats work fine, for instance.
+        """
+        row, col, data = [], [], []
+        for i, v in enumerate(iter(self)):
+            for j, cell in enumerate(v):
+                if cell == 0: continue
+                row.append(i); col.append(j); data.append(cell)
+        n_rows, n_cols = len(self), len(self.peek())
+        if dtype == None: dtype = type(self.peek()[0])
+        return csr_matrix((data, (row, col)), shape=(n_rows, n_cols),
+                          dtype=dtype)
 
 class PsqPairs():
     """

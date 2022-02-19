@@ -81,3 +81,5 @@ The following python modules need to be installed on the system for
 - umap-learn
 - hdbscan
 - tqdm
+- numpy
+- scipy
