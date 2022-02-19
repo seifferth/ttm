@@ -18,7 +18,7 @@ def aggl(vectors, clusters=10, affinity='euclidean', linkage='ward'):
             n_clusters = clusters,
             affinity = affinity,
             linkage = linkage,
-        ).fit_predict(list(vectors)).tolist()
+        ).fit_predict(vectors.matrix()).tolist()
 
 def kmeans(vectors, clusters=10, init='k-means++'):
     from sklearn.cluster import KMeans
@@ -26,7 +26,7 @@ def kmeans(vectors, clusters=10, init='k-means++'):
             n_clusters = clusters,
             init = init,
             algorithm = 'full',
-        ).fit_predict(list(vectors)).tolist()
+        ).fit_predict(vectors.matrix()).tolist()
 
 def hdbscan(vectors, metric='euclidean', cluster_selection_method='eom',
                      min_cluster_size=15):
@@ -35,7 +35,7 @@ def hdbscan(vectors, metric='euclidean', cluster_selection_method='eom',
         metric = 'euclidean',
         cluster_selection_method = 'eom',
         min_cluster_size = min_cluster_size,
-    ).fit(list(vectors)).labels_.tolist()
+    ).fit(vectors.matrix()).labels_.tolist()
 
 def random(vectors, clusters=10, weights=None, function=None):
     from random import choices
