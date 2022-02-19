@@ -1,25 +1,32 @@
 #!/usr/bin/env python3
 
 from getopt import getopt
+from tqdm import tqdm
 from .types import *
 import sys, json
 
 def bow(docs, min_df=.2, max_df=.5):
     from sklearn.feature_extraction.text import CountVectorizer
+    print('\rCreating term-document matrix for bag of words embeddings',
+          10*' ', file=sys.stderr)
     vs = CountVectorizer(min_df=min_df, max_df=max_df).fit_transform(docs)
-    return [ v.tolist() for v in vs.toarray() ]
+    for v in vs:
+        yield v.toarray().flatten().tolist()
 
 def tfidf(docs, min_df=.2, max_df=.5):
     from sklearn.feature_extraction.text import TfidfVectorizer
+    print('\rCreating weighted term-document matrix for tf-idf embeddings',
+          10*' ', file=sys.stderr)
     vs = TfidfVectorizer(min_df=min_df, max_df=max_df).fit_transform(docs)
-    return [ v.tolist() for v in vs.toarray() ]
+    for v in vs:
+        yield v.toarray().flatten().tolist()
 
 def doc2vec(docs, vector_size=300, min_count=50, window=15, sample=1e-5,
             negative=0, hs=1, epochs=40, dm=0, dbow_words=1, store_model=None):
     from gensim.models.doc2vec import Doc2Vec, TaggedDocument
     from gensim.utils import simple_preprocess
     import logging
-    logging.basicConfig(format='[doc2vec] %(levelname)s: %(message)s',
+    logging.basicConfig(format='\r[doc2vec] %(levelname)s: %(message)s',
                         level=logging.INFO)
     class PreprocessedDocs():
         def __init__(self, docs):
@@ -40,32 +47,24 @@ def doc2vec(docs, vector_size=300, min_count=50, window=15, sample=1e-5,
                     dbow_words = dbow_words)
     if store_model != None: model.save(store_model)
     del logging
-    vs = [ model.dv[i].tolist() for i, _ in enumerate(docs) ]
-    return vs
+    for i, _ in enumerate(docs):
+        yield model.dv[i].tolist()
 
 def sbert(docs, model='all-MiniLM-L6-v2'):
     from flair.data import Sentence
     from flair.embeddings import SentenceTransformerDocumentEmbeddings
     model = SentenceTransformerDocumentEmbeddings(model)
-    vs = []
-    for i, d in enumerate(docs, 1):
-        print(f'\rEmbedding document {i}', end='', file=sys.stderr)
-        s = Sentence(d); model.embed(s); v = s.get_embedding().tolist()
-        vs.append(v)
-    print(file=sys.stderr)
-    return vs
+    for d in docs:
+        s = Sentence(d); model.embed(s)
+        yield s.get_embedding().tolist()
 
 def bert(docs, model='bert-base-uncased'):
     from flair.data import Sentence
     from flair.embeddings import TransformerDocumentEmbeddings
     model = TransformerDocumentEmbeddings(model)
-    vs = []
-    for i, d in enumerate(docs, 1):
-        print(f'\rEmbedding document {i}', end='', file=sys.stderr)
-        s = Sentence(d); model.embed(s); v = s.get_embedding().tolist()
-        vs.append(v)
-    print(file=sys.stderr)
-    return vs
+    for d in docs:
+        s = Sentence(d); model.embed(s)
+        yield s.get_embedding().tolist()
 
 _cli_help="""
 Usage: ttm [OPT]... embed [COMMAND-OPTION]... [METHOD [ARG]...]...
@@ -169,8 +168,7 @@ def _cli(argv, infile, outfile):
     short2long = { '-h': '--help', '-a': '--append' }
     opts = { short2long.get(k, k).lstrip('-').replace('-', '_'): v
              for k, v in all_opts }
-    opts['include'] = [ InputFile(v) for k, v in all_opts
-                                      if k == '--include' ]
+    opts['include'] = [ v for k, v in all_opts if k == '--include']
     if 'help' in opts:
         raise HelpRequested(_cli_help)
     elif len(rest) == 0 and len(opts['include']) == 0:
@@ -216,16 +214,27 @@ def _cli(argv, infile, outfile):
         else:
             raise CliError(f"Unknown ttm embed METHOD '{rest[0]}'")
     embeddings = []
+    total_docs = sum((1 for d in infile.column('id')))
     if 'append' in opts:
-        embeddings.append(list(infile.column('highdim', map_f=json.loads)))
-    for f in opts['include']:
-        f.ensure_loaded()
-        vs = { d: v for d, v in
-               zip(f.column('id'), f.column('highdim', map_f=json.loads)) }
-        embeddings.append([vs[d] for d in infile.column('id')])
-        del vs
+        embeddings.append(infile.column('highdim', map_f=json.loads))
+    for filename in opts['include']:
+        f = InputFile(filename)
+        n_lines = 0
+        for line, id_a, id_b in zip(range(2, total_docs+2),
+                                    infile.column('id'), f.column('id')):
+            n_lines += 1
+            if id_a == id_b: continue
+            raise ExpectedRuntimeError(
+                f"The row order in '{filename}' differs from the one found "
+                f"in the main input file.\nLine {line}: Mismatch between "
+                f"'{id_a}' (main input file) and '{id_b}' ({filename}).")
+        if n_lines != total_docs:
+            raise ExpectedRuntimeError(
+                f"The included file '{filename}' contains {n_lines} lines, "
+                f"but the main input file contains {total_docs}"
+            )
+        embeddings.append(f.column('highdim'))
     for m, args in methods:
-        print(f'Creating {m.__name__} embeddings', file=sys.stderr)
         embeddings.append(m(infile.column('content'), **args))
     if 'highdim_only' in opts:
         print(f'{"id"}\t{"highdim"}', file=outfile)
@@ -233,8 +242,8 @@ def _cli(argv, infile, outfile):
     else:
         input_lines = iter(infile.strip('highdim'))
         print(f'{next(input_lines)}\t{"highdim"}', file=outfile)
-    for i, line in enumerate(input_lines):
+    for line in tqdm(input_lines, 'Embedding documents', total=total_docs):
         v = []
-        for vs in embeddings:
-            v.extend(vs[i])
+        for e in embeddings:
+            v.extend(next(e))
         print(f'{line}\t{json.dumps(v)}', file=outfile)
