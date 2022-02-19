@@ -59,6 +59,7 @@ class CachingFileReader():
         self.cache_complete = False
         self.filename = filename
         self.file_accessed = False
+        self._len = None
         self.f = _open(filename, 'in')
         self.regular_file = self.f != sys.stdin and self.f.seekable()
         if self.regular_file: self.f.close()
@@ -82,9 +83,10 @@ class CachingFileReader():
             raise Exception('Second iteration over input started before '\
                             'cache was fully populated during first one')
     def ensure_loaded(self):
-        if not self.regular_file and not self.cache_complete:
-            for _ in self:
-                pass
+        _ = len(self)   # len iterates over all lines (unless it already has)
+    def __len__(self):
+        if self._len == None: self._len = sum((1 for _ in self))
+        return self._len
 
 class InputFile():
     """
@@ -131,6 +133,8 @@ class InputFile():
         formats, such as json.
         """
         return Column(corpus=self, column=column, map_f=map_f)
+    def __len__(self):
+        return len(self.file_reader)
 
 class Column():
     """
@@ -152,6 +156,8 @@ class Column():
             raise ExpectedRuntimeError('Input file is empty') from e
         for line in lines:
             yield self.map_f(line.split('\t')[i_col])
+    def __len__(self):
+        return len(self.corpus) - 1
 
 class PsqPairs():
     """

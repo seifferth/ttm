@@ -214,25 +214,23 @@ def _cli(argv, infile, outfile):
         else:
             raise CliError(f"Unknown ttm embed METHOD '{rest[0]}'")
     embeddings = []
-    total_docs = sum((1 for d in infile.column('id')))
+    total_docs = len(infile.column('id'))
     if 'append' in opts:
         embeddings.append(infile.column('highdim', map_f=json.loads))
     for filename in opts['include']:
         f = InputFile(filename)
-        n_lines = 0
+        if len(f) != len(infile):
+            raise ExpectedRuntimeError(
+                f"The included file '{filename}' contains {len(f)} lines, "
+                f"but the main input file contains {len(infile)}"
+            )
         for line, id_a, id_b in zip(range(2, total_docs+2),
                                     infile.column('id'), f.column('id')):
-            n_lines += 1
             if id_a == id_b: continue
             raise ExpectedRuntimeError(
                 f"The row order in '{filename}' differs from the one found "
                 f"in the main input file.\nLine {line}: Mismatch between "
                 f"'{id_a}' (main input file) and '{id_b}' ({filename}).")
-        if n_lines != total_docs:
-            raise ExpectedRuntimeError(
-                f"The included file '{filename}' contains {n_lines} lines, "
-                f"but the main input file contains {total_docs}"
-            )
         embeddings.append(f.column('highdim'))
     for m, args in methods:
         embeddings.append(m(infile.column('content'), **args))
