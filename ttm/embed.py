@@ -66,6 +66,20 @@ def bert(docs, model='bert-base-uncased'):
         s = Sentence(d); model.embed(s)
         yield s.get_embedding().tolist()
 
+def pool(docs, pooling='mean', word_embeddings=[], flair_embeddings=[]):
+    from flair.data import Sentence
+    from flair.embeddings import WordEmbeddings, FlairEmbeddings, \
+                                 DocumentPoolEmbeddings
+    embeddings = []
+    for e in word_embeddings:
+        embeddings.append(WordEmbeddings(e))
+    for e in flair_embeddings:
+        embeddings.append(FlairEmbeddings(e))
+    model = DocumentPoolEmbeddings(embeddings)
+    for d in docs:
+        s = Sentence(d); model.embed(s)
+        yield s.get_embedding().tolist()
+
 _cli_help="""
 Usage: ttm [OPT]... embed [COMMAND-OPTION]... [METHOD [ARG]...]...
 
@@ -99,6 +113,8 @@ Methods
     sbert       Create Sentence BERT embeddings using the flair wrapper
                 around the sentence_transformers package. These embeddings
                 are also used by Maarten Grootendorst's BERTopic.
+    pool        Create document embeddings by pooling word embeddings for
+                every word in the document, as proposed by Akbik et al.
 
 Command Options
     -a, --append
@@ -160,6 +176,22 @@ Arguments for 'sbert'
          as part of the sentence_transformers documentation. See
          https://www.sbert.net/docs/pretrained_models.html for a
          complete list of available models.
+
+Arguments for 'pool'
+    --pooling METHOD
+         The pooling method to use for combining the specified word
+         embeddings. The pooling METHOD may be any of 'mean', 'min' or
+         'max'. Default: 'mean'.
+    --word-embeddings MODEL[,MODEL]...
+         Comma-separated list of pretrained word embedding models to use.
+         See 'pydoc flair.embeddings.WordEmbeddings.__init__' for further
+         information on supported embeddings. If this option is specified
+         multiple times, the lists are concatenated.
+    --flair-embeddings MODEL[,MODEL]...
+         Comma-separated list of pretrained contextual string embeddings
+         to use. See 'pydoc flair.embeddings.FlairEmbeddings.__init__' for
+         further information on supported embeddings. If this option is
+         specified multiple times, the lists are concatenated.
 """.lstrip()
 
 def _cli(argv, infile, outfile):
@@ -211,6 +243,26 @@ def _cli(argv, infile, outfile):
             sbert_opts, rest = getopt(rest[1:], '', ['model='])
             sbert_opts = { k.lstrip('-'): v for k, v in sbert_opts }
             methods.append((sbert, sbert_opts))
+        elif rest[0] == 'pool':
+            all_pool_opts, rest = getopt(rest[1:], '', ['pooling=',
+                                'word-embeddings=', 'flair-embeddings='])
+            pool_opts = { 'word_embeddings': [], 'flair_embeddings': [] }
+            for k, v in all_pool_opts:
+                if k == '--pooling':
+                    if v not in {'mean','min','max'}:
+                        raise CliError("--pooling METHOD must be 'mean', "
+                                      f"'min' or 'max', not '{v}'")
+                    pool_opts['pooling'] = v
+                if k == '--word-embeddings':
+                    pool_opts['word_embeddings'].extend(v.split(','))
+                if k == '--flair-embeddings':
+                    pool_opts['flair_embeddings'].extend(v.split(','))
+            if not pool_opts['word_embeddings'] \
+                                and not pool_opts['flair_embeddings']:
+                raise CliError('At least one of --word-embeddings or '
+                               '--flair-embeddings needs to be specified '
+                               "for 'ttm embed pool' embeddings")
+            methods.append((pool, pool_opts))
         else:
             raise CliError(f"Unknown ttm embed METHOD '{rest[0]}'")
     embeddings = []
