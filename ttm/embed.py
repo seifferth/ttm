@@ -50,18 +50,18 @@ def doc2vec(docs, vector_size=300, min_count=50, window=15, sample=1e-5,
     for i, _ in enumerate(docs):
         yield model.dv[i].tolist()
 
-def sbert(docs, model='all-MiniLM-L6-v2'):
-    from flair.data import Sentence
-    from flair.embeddings import SentenceTransformerDocumentEmbeddings
-    model = SentenceTransformerDocumentEmbeddings(model)
-    for d in docs:
-        s = Sentence(d); model.embed(s)
-        yield s.get_embedding().tolist()
-
 def bert(docs, model='bert-base-uncased'):
     from flair.data import Sentence
     from flair.embeddings import TransformerDocumentEmbeddings
     model = TransformerDocumentEmbeddings(model)
+    for d in docs:
+        s = Sentence(d); model.embed(s)
+        yield s.get_embedding().tolist()
+
+def sbert(docs, model='all-MiniLM-L6-v2'):
+    from flair.data import Sentence
+    from flair.embeddings import SentenceTransformerDocumentEmbeddings
+    model = SentenceTransformerDocumentEmbeddings(model)
     for d in docs:
         s = Sentence(d); model.embed(s)
         yield s.get_embedding().tolist()
