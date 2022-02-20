@@ -37,7 +37,7 @@ def bucket_probability(cluster_distribution: dict) -> float:
     """
     Random bucket score. Given a set of specifically sized buckets, and
     assuming that pages are randomly sorted into buckets (respecting the
-    bucket sizes), what is the possibility that any two pages appear in
+    bucket sizes), what is the probability that any two pages appear in
     the same bucket.
     """
     return sum(( x**2 for x in cluster_distribution.values() ))
