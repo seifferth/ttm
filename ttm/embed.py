@@ -50,10 +50,11 @@ def doc2vec(docs, vector_size=300, min_count=50, window=15, sample=1e-5,
     for i, _ in enumerate(docs):
         yield model.dv[i].tolist()
 
-def bert(docs, model='bert-base-uncased'):
+def bert(docs, model='bert-base-uncased', pooling='cls'):
     from flair.data import Sentence
     from flair.embeddings import TransformerDocumentEmbeddings
-    model = TransformerDocumentEmbeddings(model, fine_tune=False)
+    model = TransformerDocumentEmbeddings(model, fine_tune=False,
+                                          pooling=pooling)
     for d in docs:
         s = Sentence(d); model.embed(s)
         yield s.get_embedding().tolist()
@@ -163,6 +164,10 @@ Arguments for 'doc2vec'
          independently of ttm.
 
 Arguments for 'bert'
+    --pooling METHOD
+         The pooling method to use for combining the transformer word
+         embeddings. The pooling METHOD may be any of 'cls', 'max' or
+         'mean'. Default: 'cls'.
     --model MODEL
         Name of the pre-trained language model to use. The default MODEL
         is 'bert-base-uncased'. A complete list of supported models is
@@ -236,8 +241,12 @@ def _cli(argv, infile, outfile):
                     doc2vec_opts[k] = float(doc2vec_opts[k])
             methods.append((doc2vec, doc2vec_opts))
         elif rest[0] == 'bert':
-            bert_opts, rest = getopt(rest[1:], '', ['model='])
+            bert_opts, rest = getopt(rest[1:], '', ['model=', 'pooling='])
             bert_opts = { k.lstrip('-'): v for k, v in bert_opts }
+            pooling = bert_opts.get('pooling', None)
+            if pooling != None and pooling not in ['cls', 'max', 'mean']:
+                raise CliError("bert --pooling METHOD must be 'cls', 'max' "
+                              f"or 'mean', not '{pooling}'")
             methods.append((bert, bert_opts))
         elif rest[0] == 'sbert':
             sbert_opts, rest = getopt(rest[1:], '', ['model='])
@@ -250,8 +259,8 @@ def _cli(argv, infile, outfile):
             for k, v in all_pool_opts:
                 if k == '--pooling':
                     if v not in {'mean','min','max'}:
-                        raise CliError("--pooling METHOD must be 'mean', "
-                                      f"'min' or 'max', not '{v}'")
+                        raise CliError("pool --pooling METHOD must be "
+                                      f"'mean', 'min' or 'max', not '{v}'")
                     pool_opts['pooling'] = v
                 if k == '--word-embeddings':
                     pool_opts['word_embeddings'].extend(v.split(','))
