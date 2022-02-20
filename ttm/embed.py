@@ -73,9 +73,9 @@ def pool(docs, pooling='mean', word_embeddings=[], flair_embeddings=[]):
                                  DocumentPoolEmbeddings
     embeddings = []
     for e in word_embeddings:
-        embeddings.append(WordEmbeddings(e))
+        embeddings.append(WordEmbeddings(e, fine_tune=False))
     for e in flair_embeddings:
-        embeddings.append(FlairEmbeddings(e))
+        embeddings.append(FlairEmbeddings(e, fine_tune=False))
     model = DocumentPoolEmbeddings(embeddings)
     for d in docs:
         s = Sentence(d); model.embed(s)
