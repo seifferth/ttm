@@ -53,7 +53,7 @@ def doc2vec(docs, vector_size=300, min_count=50, window=15, sample=1e-5,
 def bert(docs, model='bert-base-uncased'):
     from flair.data import Sentence
     from flair.embeddings import TransformerDocumentEmbeddings
-    model = TransformerDocumentEmbeddings(model)
+    model = TransformerDocumentEmbeddings(model, fine_tune=False)
     for d in docs:
         s = Sentence(d); model.embed(s)
         yield s.get_embedding().tolist()
