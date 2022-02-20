@@ -100,6 +100,7 @@ not used:
   ttm.redim.svd, ttm.cluster.aggl, ttm.cluster.kmeans, ttm.desc, ttm.eval)
 - gensim (used in ttm.embed.doc2vec)
 - flair (used in ttm.embed.bert, ttm.embed.sbert, ttm.embed.pool)
+- sentence-transformers (used in ttm.embed.bert, ttm.embed.sbert)
 - umap-learn (used in ttm.redim.umap)
 - hdbscan (used in ttm.cluster.hdbscan)
 

@@ -13,7 +13,7 @@ setup(
     python_requires='>=3.7',
     install_requires=[
         'numpy', 'scipy', 'tqdm', 'sklearn', 'gensim', 'flair',
-        'umap-learn', 'hdbscan'
+        'umap-learn', 'hdbscan', 'sentence-transformers'
     ],
     author='Frank Seifferth',
     author_email='frankseifferth@posteo.net',
