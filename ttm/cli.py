@@ -89,7 +89,7 @@ def main() -> int:
         print(h, file=sys.stdout)
         return 0
     except BrokenPipeError as e:
-        return 0
+        return 141
     except KeyboardInterrupt as e:
         return 130
     except GetoptError as e:
