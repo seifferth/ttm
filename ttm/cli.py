@@ -90,6 +90,8 @@ def main() -> int:
         return 0
     except BrokenPipeError as e:
         return 0
+    except KeyboardInterrupt as e:
+        return 130
     except GetoptError as e:
         print(e, file=sys.stderr)
         return 1
