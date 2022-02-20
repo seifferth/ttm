@@ -156,6 +156,7 @@ def _cli(argv, infile, outfile):
     highdim = infile.column('highdim', map_f=json.loads)
     lowdim = method(highdim, **method_args)
     # Copy result into outfile
+    infile.ensure_loaded()
     input_lines = iter(infile.strip('lowdim'))
     print(f'{next(input_lines)}\t{"lowdim"}', file=outfile)
     for line, v in zip(input_lines, lowdim):
