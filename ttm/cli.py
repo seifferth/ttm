@@ -8,7 +8,9 @@ from . import eval as ttm_eval
 _cli_help="""
 Usage: ttm [GLOBAL-OPTION]... COMMAND [COMMAND-OPTION]...
 
-See 'ttm COMMAND --help' for subcommand-specific help messages.
+See 'ttm COMMAND --help' for subcommand-specific help messages. If
+no COMMAND is specified, ttm will copy tsv data without modification.
+This allows to use the -i and -o switches only.
 
 Global Options
     -i FILE, --input FILE
@@ -64,7 +66,10 @@ def cli(argv):
             raise CliError('Unable to display help message for unknown '\
                           f"Unknown ttm COMMAND '{cmd[0]}'")
     if len(cmd) == 0:
-        raise CliError('No COMMAND specified for ttm')
+        infile = InputFile(opts.get('input', '-'))
+        outfile = OutputFile(opts.get('output', '-'))
+        for line in infile:
+            print(line, file=outfile)
     elif cmd[0] in c:
         if cmd[0] in ['embed', 'redim', 'cluster', 'desc']:
             infile = InputFile(opts.get('input', '-'))
