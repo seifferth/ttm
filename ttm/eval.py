@@ -108,6 +108,10 @@ Evaluation Metrics
         histogram. If --format is 'tsv', the relative cluster sizes are
         included as a json-serialized dictionary.
 
+    highdim-size, lowdim-size
+        The number of dimensions of the highdim and lowdim vectors
+        respectively.
+
     calinski-harabasz
         The Caliński-Harabasz Score is a metric for measuring the degree
         of separation between clusters proposed by T. Caliński and
@@ -172,12 +176,21 @@ Command Options
 """.lstrip()
 
 def _print_text(model_name: str, cluster_distribution: dict,
+                highdim_size: int, lowdim_size: int,
                 calinski_harabasz: float, davies_bouldin: float,
                 silhouette: tuple, psq_count: float, psq_score: tuple):
     print(f'Evaluation results for {model_name}')
     for cluster, quota in cluster_distribution.items():
         print(3*' ', f'{cluster:>5}    {100*quota:6.2f} %    ',
               round(quota*50)*'*')
+    if highdim_size == None:
+        print(f'  highdim-size             N/A')
+    else:
+        print(f'  highdim-size          {highdim_size}')
+    if lowdim_size == None:
+        print(f'  lowdim-size              N/A')
+    else:
+        print(f'  lowdim-size           {lowdim_size}')
     if calinski_harabasz == None:
         print(f'  calinski-harabasz  undefined')
     else:
@@ -206,11 +219,15 @@ def _print_text(model_name: str, cluster_distribution: dict,
 def _print_tsv_header():
     row = [ 'model_name', 'psq_score', 'psq_score_zoom', 'psq_count',
             'silhouette', 'silhouette_samples', 'davies_bouldin',
-            'calinski_harabasz', 'cluster_distribution' ]
+            'calinski_harabasz', 'highdim_size', 'lowdim_size',
+            'clusters', 'cluster_distribution' ]
     print(*row, sep='\t', end='\n')
 def _print_tsv(model_name: str, cluster_distribution: dict,
+               highdim_size: int, lowdim_size: int,
                calinski_harabasz: float, davies_bouldin: float,
                silhouette: tuple, psq_count: float, psq_score: tuple):
+    if highdim_size == None: highdim_size = 'N/A'
+    if lowdim_size == None: lowdim_size = 'N/A'
     if calinski_harabasz == None: calinski_harabasz = 'undefined'
     if davies_bouldin == None: davies_bouldin = 'undefined'
     if silhouette == None: silhouette = ('undefined', 'undefined')
@@ -221,7 +238,8 @@ def _print_tsv(model_name: str, cluster_distribution: dict,
         psq_score = 'undefined'
     row = [ model_name, psq_score[0], psq_score[1], psq_count,
             silhouette[0], silhouette[1], davies_bouldin,
-            calinski_harabasz, json.dumps(cluster_distribution) ]
+            calinski_harabasz, highdim_size, lowdim_size,
+            len(cluster_distribution), json.dumps(cluster_distribution) ]
     print(*row, sep='\t', end='\n')
 
 def _cli(argv, infile, outfile):
@@ -250,6 +268,10 @@ def _cli(argv, infile, outfile):
         result = { 'model_name': name }
         result['cluster_distribution'] = \
                             cluster_distribution(f.column('cluster'))
+        result['highdim_size'] = \
+                            len(f.column('highdim', map_f=json.loads).peek())
+        result['lowdim_size'] = \
+                            len(f.column('lowdim', map_f=json.loads).peek())
         X, y = extract_X_y(f)
         if len(result['cluster_distribution']) > 1:
             result['calinski_harabasz'] = calinski_harabasz(X, y)
