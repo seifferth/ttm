@@ -10,7 +10,7 @@ def id(vectors):
 def umap(vectors, components=5, neighbors=15, metric='cosine',
                   min_dist=.1):
     from umap import UMAP
-    print(f'Applying UMAP ...', end='', file=sys.stderr, flush=True)
+    print('Applying UMAP ...', end='', file=sys.stderr, flush=True)
     result = UMAP(
         n_neighbors = neighbors,
         n_components = components,
@@ -37,7 +37,7 @@ def lda(vectors, components=5, max_epochs=10, shift=False):
                 for r in range(rows):
                     matrix[r,c] -= colmin
         print(' done', end='\n', file=sys.stderr, flush=True)
-    print(f'Applying LDA ...', end='', file=sys.stderr, flush=True)
+    print('Applying LDA ...', end='', file=sys.stderr, flush=True)
     result = LatentDirichletAllocation(
             max_iter=max_epochs,
             n_components=components,
@@ -47,7 +47,7 @@ def lda(vectors, components=5, max_epochs=10, shift=False):
 
 def svd(vectors, components=5):
     from sklearn.decomposition import TruncatedSVD
-    print(f'Applying SVD ...', end='', file=sys.stderr, flush=True)
+    print('Applying SVD ...', end='', file=sys.stderr, flush=True)
     result = TruncatedSVD(
             n_components = 5,
             algorithm = 'arpack',   # Should produce deterministic results
