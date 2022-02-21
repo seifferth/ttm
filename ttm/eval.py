@@ -266,14 +266,26 @@ def _cli(argv, infile, outfile):
     if opts['format'] == 'tsv': _print_tsv_header()
     for f, name in zip(files, filenames):
         result = { 'model_name': name }
-        result['cluster_distribution'] = \
-                            cluster_distribution(f.column('cluster'))
-        result['highdim_size'] = \
+        try:
+            result['cluster_distribution'] = \
+                                cluster_distribution(f.column('cluster'))
+        except ColumnNotFound:
+            result['cluster_distribution'] = dict()
+        try:
+            result['highdim_size'] = \
                             len(f.column('highdim', map_f=json.loads).peek())
-        result['lowdim_size'] = \
+        except ColumnNotFound:
+            result['highdim_size'] = None
+        try:
+            result['lowdim_size'] = \
                             len(f.column('lowdim', map_f=json.loads).peek())
-        X, y = extract_X_y(f)
-        if len(result['cluster_distribution']) > 1:
+        except ColumnNotFound:
+            result['lowdim_size'] = None
+        try:
+            X, y = extract_X_y(f)
+        except ColumnNotFound:
+            X, y = None, None
+        if len(result['cluster_distribution']) > 1 and X and y:
             result['calinski_harabasz'] = calinski_harabasz(X, y)
             result['davies_bouldin'] = davies_bouldin(X, y)
             result['silhouette'] = silhouette(X, y, **silhouette_opts)

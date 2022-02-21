@@ -10,6 +10,8 @@ class CliError(Exception):
     pass
 class ExpectedRuntimeError(Exception):
     pass
+class ColumnNotFound(Exception):
+    pass
 
 def _open(filename, direction):
     """
@@ -153,7 +155,11 @@ class Column():
     def __iter__(self):
         lines = iter(self.corpus)
         try:
-            i_col = next(lines).split('\t').index(self.column)
+            header = next(lines).split('\t')
+            if self.column not in header:
+                raise ColumnNotFound(f"The column '{self.column}' does "
+                                      'not exist in the input file')
+            i_col = header.index(self.column)
         except StopIteration as e:
             raise ExpectedRuntimeError('Input file is empty') from e
         for line in lines:
