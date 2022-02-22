@@ -73,7 +73,7 @@ Methods
                 results produced by other means differ from random noise.
 
 Arguments for aggl
-    --clusters N        Number of clusters to produce
+    --clusters N        Number of clusters to produce. Default: 10.
     --affinity METRIC   Use METRIC as a distance measure between points.
                         Can be any one of 'euclidean', 'l1', 'l2',
                         'manhattan', or 'cosine'. Default: 'euclidean'.
@@ -85,7 +85,7 @@ Arguments for aggl
                         see 'pydoc sklearn.cluster.AgglomerativeClustering'.
 
 Arguments for kmeans
-    --clusters N        Number of clusters to produce.
+    --clusters N        Number of clusters to produce. Default: 10.
     --init METHOD       Initialization method for k-means. Can be either
                         'k-means++' or 'random'. Default: 'k-means++'. See
                         'pydoc sklearn.cluster.KMeans' for further details.
@@ -102,7 +102,7 @@ Arguments for hdbscan
                 Default: 15. For more details see 'pydoc hdbscan.HDBSCAN'.
 
 Arguments for random
-    --clusters N        Number of clusters to produce.
+    --clusters N        Number of clusters to produce. Default: 10.
     --weights WEIGHTS   The weights to use for producing the clusters,
                         specified as a list of comma-separated floating
                         point numbers. If both --clusters and --weights
