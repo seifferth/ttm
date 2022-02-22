@@ -292,7 +292,7 @@ def _cli(argv, infile, outfile):
                 f"The row order in '{filename}' differs from the one found "
                 f"in the main input file.\nLine {line}: Mismatch between "
                 f"'{id_a}' (main input file) and '{id_b}' ({filename}).")
-        embeddings.append(iter(f.column('highdim')))
+        embeddings.append(iter(f.column('highdim', map_f=json.loads)))
     for m, args in methods:
         embeddings.append(m(infile.column('content'), **args))
     if 'highdim_only' in opts:
