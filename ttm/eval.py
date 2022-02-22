@@ -158,6 +158,12 @@ Command Options
                 indentation and is more human readable than the tabular
                 'tsv'. The 'tsv' format may provide a more convenient
                 starting point for further analysis. Default: 'text'.
+    --include FILE
+                Include evaluation metrics found in FILE, where FILE is
+                a tsv file with the same format as produced with the '-f'
+                option. Among other things, this allows to convert saved
+                tsv-formatted evaluation results to the text format which
+                features histograms.
     --silhouette-metric METRIC
                 Distance metric used for calculating the silhouette
                 coefficient. For a full list of supported metrics see
@@ -176,7 +182,7 @@ Command Options
 """.lstrip()
 
 class EvaluationResult():
-    def __init__(self, model_name: str):
+    def __init__(self, model_name: str=None):
         self.model_name: str = model_name
         self.cluster_distribution: dict = dict()
         self.clusters: int = None
@@ -189,6 +195,31 @@ class EvaluationResult():
         self.psq_count: float = None
         self.psq_score: float = None
         self.psq_score_zoom: float = None
+
+def _parse_tsv(f: InputFile) -> EvaluationResult():
+    def _parse_cell(key: str, val: str):
+        if val in ['N/A', 'undefined']: return None
+        if key == 'model_name': return val
+        elif key == 'cluster_distribution':
+            if not val.strip(): return val
+            return json.loads(val)
+        elif key in ['clusters', 'highdim_size', 'lowdim_size']:
+            return int(val)
+        elif key in ['calinski_harabasz', 'davies_bouldin', 'silhouette',
+                     'silhouette_samples', 'psq_count', 'psq_score',
+                     'psq_score_zoom' ]:
+            return float(val)
+        else: raise ValueError(f"Unknown key '{key}'")
+    lines = map(lambda x: x.split('\t'), iter(f))
+    header = next(lines)
+    for l in lines:
+        result = EvaluationResult()
+        for i, v in enumerate(l):
+            k = header[i]
+            if k not in _tsv_header: continue
+            v = _parse_cell(k, v)
+            result.__dict__[k] = v
+        yield result
 
 def _print_text(r: EvaluationResult):
     print(f'Evaluation results for {r.model_name}')
@@ -255,15 +286,16 @@ def _print_tsv(r: EvaluationResult):
     print(*row, sep='\t', end='\n')
 
 def _cli(argv, infile, outfile):
-    opts, filenames = getopt(argv, 'hf:', ['help', 'format=',
+    all_opts, filenames = getopt(argv, 'hf:', ['help', 'format=', 'include=',
             'silhouette-metric=', 'silhouette-sample-size=', 'psq-pairs='])
     short2long = { '-h': '--help', '-f': '--format' }
     opts = { short2long.get(k, k).lstrip('-').replace('-', '_'): v
-             for k, v in opts }
+             for k, v in all_opts }
+    opts['include'] = [ v for k, v in all_opts if k == '--include' ]
     if 'help' in opts:
         raise HelpRequested(_cli_help)
-    if len(filenames) < 1:
-        raise CliError('At least one FILE argument is required '
+    if len(filenames) < 1 and len(opts['include']) < 1:
+        raise CliError('At least one FILE or --include argument is required '
                        'for ttm eval')
     files = [ InputFile(f) for f in filenames ]
     if not 'format' in opts: opts['format'] = 'text'
@@ -276,6 +308,14 @@ def _cli(argv, infile, outfile):
             if k == 'sample_size': v = float(v)
             silhouette_opts[k] = v
     if opts['format'] == 'tsv': _print_tsv_header()
+    for f in opts['include']:
+        for result in _parse_tsv(InputFile(f)):
+            if opts['format'] == 'text':
+                _print_text(result)
+            elif opts['format'] == 'tsv':
+                _print_tsv(result)
+            else:
+                raise CliError("Unknown FORMAT '{}'".format(opts['format']))
     for f, name in zip(files, filenames):
         result = EvaluationResult(name)
         try:
