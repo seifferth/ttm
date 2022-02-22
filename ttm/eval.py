@@ -175,71 +175,83 @@ Command Options
     -h, --help  Print this help message and exit.
 """.lstrip()
 
-def _print_text(model_name: str, cluster_distribution: dict,
-                highdim_size: int, lowdim_size: int,
-                calinski_harabasz: float, davies_bouldin: float,
-                silhouette: tuple, psq_count: float, psq_score: tuple):
-    print(f'Evaluation results for {model_name}')
-    for cluster, quota in cluster_distribution.items():
+class EvaluationResult():
+    def __init__(self, model_name: str):
+        self.model_name: str = model_name
+        self.cluster_distribution: dict = dict()
+        self.clusters: int = None
+        self.highdim_size: int = None
+        self.lowdim_size: int = None
+        self.calinski_harabasz: float = None
+        self.davies_bouldin: float = None
+        self.silhouette: float = None
+        self.silhouette_samples: float = None
+        self.psq_count: float = None
+        self.psq_score: float = None
+        self.psq_score_zoom: float = None
+
+def _print_text(r: EvaluationResult):
+    print(f'Evaluation results for {r.model_name}')
+    for cluster, quota in r.cluster_distribution.items():
         print(3*' ', f'{cluster:>5}    {100*quota:6.2f} %    ',
               round(quota*50)*'*')
-    if highdim_size == None:
+    if r.highdim_size == None:
         print(f'  highdim-size             N/A')
     else:
-        print(f'  highdim-size          {highdim_size}')
-    if lowdim_size == None:
+        print(f'  highdim-size          {r.highdim_size}')
+    if r.lowdim_size == None:
         print(f'  lowdim-size              N/A')
     else:
-        print(f'  lowdim-size           {lowdim_size}')
-    if calinski_harabasz == None:
+        print(f'  lowdim-size           {r.lowdim_size}')
+    if r.calinski_harabasz == None:
         print(f'  calinski-harabasz  undefined')
     else:
-        print(f'  calinski-harabasz     {calinski_harabasz:<.4f}')
-    if davies_bouldin == None:
+        print(f'  calinski-harabasz     {r.calinski_harabasz:<.4f}')
+    if r.davies_bouldin == None:
         print(f'  davies-bouldin     undefined')
     else:
-        print(f'  davies-bouldin        {davies_bouldin:<.4f}')
-    if silhouette == None:
+        print(f'  davies-bouldin        {r.davies_bouldin:<.4f}')
+    if r.silhouette == None:
         print(f'  silhouette         undefined')
     else:
-        print(f'  silhouette           {silhouette[0]:>7.4f}  '
-              f'({silhouette[1]} samples)')
-    if psq_count == None:
+        print(f'  silhouette           {r.silhouette:>7.4f}  '
+              f'({r.silhouette_samples} samples)')
+    if r.psq_count == None:
         print(f'  psq-count                N/A')
         print(f'  psq-score                N/A')
     else:
-        print(f'  psq-count            {psq_count:>7.4f}')
-        if psq_score == None:
+        print(f'  psq-count            {r.psq_count:>7.4f}')
+        if r.psq_score == None:
             print(f'  psq-score          undefined')
         else:
-            print(f'  psq-score            {psq_score[0]:>7.4f}  '
-                  f'(zoom {psq_score[1]:.2f})')
+            print(f'  psq-score            {r.psq_score:>7.4f}  '
+                  f'(zoom {r.psq_score_zoom:.2f})')
     print()
 
-def _print_tsv_header():
-    row = [ 'model_name', 'psq_score', 'psq_score_zoom', 'psq_count',
+_tsv_header = [
+            'model_name', 'psq_score', 'psq_score_zoom', 'psq_count',
             'silhouette', 'silhouette_samples', 'davies_bouldin',
             'calinski_harabasz', 'highdim_size', 'lowdim_size',
-            'clusters', 'cluster_distribution' ]
-    print(*row, sep='\t', end='\n')
-def _print_tsv(model_name: str, cluster_distribution: dict,
-               highdim_size: int, lowdim_size: int,
-               calinski_harabasz: float, davies_bouldin: float,
-               silhouette: tuple, psq_count: float, psq_score: tuple):
-    if highdim_size == None: highdim_size = 'N/A'
-    if lowdim_size == None: lowdim_size = 'N/A'
-    if calinski_harabasz == None: calinski_harabasz = 'undefined'
-    if davies_bouldin == None: davies_bouldin = 'undefined'
-    if silhouette == None: silhouette = ('undefined', 'undefined')
-    if psq_count == None:
-        psq_count = 'N/A'
-        psq_score = ('N/A', 'N/A')
-    elif psq_score == None:
-        psq_score = 'undefined'
-    row = [ model_name, psq_score[0], psq_score[1], psq_count,
-            silhouette[0], silhouette[1], davies_bouldin,
-            calinski_harabasz, highdim_size, lowdim_size,
-            len(cluster_distribution), json.dumps(cluster_distribution) ]
+            'clusters', 'cluster_distribution'
+]
+def _print_tsv_header():
+    print(*_tsv_header, sep='\t', end='\n')
+def _print_tsv(r: EvaluationResult):
+    if r.highdim_size == None: r.highdim_size = 'N/A'
+    if r.lowdim_size == None: r.lowdim_size = 'N/A'
+    if r.calinski_harabasz == None: r.calinski_harabasz = 'undefined'
+    if r.davies_bouldin == None: r.davies_bouldin = 'undefined'
+    if r.silhouette == None:
+        r.silhouette, r.silhouette_samples = 'undefined', 'undefined'
+    if r.psq_count == None:
+        r.psq_count = 'N/A'
+        r.psq_score, r.psq_score_zoom = 'N/A', 'N/A'
+    elif r.psq_score == None:
+        r.psq_score, r.psq_score_zoom = 'undefined', 'undefined'
+    row = [ r.model_name, r.psq_score, r.psq_score_zoom, r.psq_count,
+            r.silhouette, r.silhouette_samples, r.davies_bouldin,
+            r.calinski_harabasz, r.highdim_size, r.lowdim_size,
+            r.clusters, json.dumps(r.cluster_distribution) ]
     print(*row, sep='\t', end='\n')
 
 def _cli(argv, infile, outfile):
@@ -265,47 +277,50 @@ def _cli(argv, infile, outfile):
             silhouette_opts[k] = v
     if opts['format'] == 'tsv': _print_tsv_header()
     for f, name in zip(files, filenames):
-        result = { 'model_name': name }
+        result = EvaluationResult(name)
         try:
-            result['cluster_distribution'] = \
+            result.cluster_distribution = \
                                 cluster_distribution(f.column('cluster'))
         except ColumnNotFound:
-            result['cluster_distribution'] = dict()
+            result.cluster_distribution = dict()
+        result.clusters = len(result.cluster_distribution)
         try:
-            result['highdim_size'] = \
+            result.highdim_size = \
                             len(f.column('highdim', map_f=json.loads).peek())
         except ColumnNotFound:
-            result['highdim_size'] = None
+            result.highdim_size = None
         try:
-            result['lowdim_size'] = \
+            result.lowdim_size = \
                             len(f.column('lowdim', map_f=json.loads).peek())
         except ColumnNotFound:
-            result['lowdim_size'] = None
+            result.lowdim_size = None
         try:
             X, y = extract_X_y(f)
         except ColumnNotFound:
             X, y = None, None
-        if len(result['cluster_distribution']) > 1 and X and y:
-            result['calinski_harabasz'] = calinski_harabasz(X, y)
-            result['davies_bouldin'] = davies_bouldin(X, y)
-            result['silhouette'] = silhouette(X, y, **silhouette_opts)
+        if len(result.cluster_distribution) > 1 and X and y:
+            result.calinski_harabasz = calinski_harabasz(X, y)
+            result.davies_bouldin = davies_bouldin(X, y)
+            result.silhouette, result.silhouette_samples = \
+                                    silhouette(X, y, **silhouette_opts)
         else:
-            result['calinski_harabasz'] = None
-            result['davies_bouldin'] = None
-            result['silhouette'] = None
+            result.calinski_harabasz = None
+            result.davies_bouldin = None
+            result.silhouette = None
         if 'psq_pairs' in opts:
-            result['psq_count'] = psq_count(f, opts['psq_pairs'])
-            if len(result['cluster_distribution']) > 1:
-                result['psq_score'] = psq_score(result['psq_count'],
-                                        result['cluster_distribution'])
+            result.psq_count = psq_count(f, opts['psq_pairs'])
+            if len(result.cluster_distribution) > 1:
+                result.psq_score, result.psq_score_zoom = \
+                                psq_score(result.psq_count,
+                                        result.cluster_distribution)
             else:
-                result['psq_score'] = None
+                result.psq_score, result.psq_score_zoom = None, None
         else:
-            result['psq_count'] = None
-            result['psq_score'] = None
+            result.psq_count = None
+            result.psq_score, result.psq_score_zoom = None, None
         if opts['format'] == 'text':
-            _print_text(**result)
+            _print_text(result)
         elif opts['format'] == 'tsv':
-            _print_tsv(**result)
+            _print_tsv(result)
         else:
             raise CliError("Unknown FORMAT '{}'".format(opts['format']))
