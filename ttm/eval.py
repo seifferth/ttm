@@ -188,10 +188,10 @@ class EvaluationResult():
         self.clusters: int = None
         self.highdim_size: int = None
         self.lowdim_size: int = None
+        self.silhouette_samples: int = None
         self.calinski_harabasz: float = None
         self.davies_bouldin: float = None
         self.silhouette: float = None
-        self.silhouette_samples: float = None
         self.psq_count: float = None
         self.psq_score: float = None
         self.psq_score_zoom: float = None
@@ -203,11 +203,11 @@ def _parse_tsv(f: InputFile) -> EvaluationResult():
         elif key == 'cluster_distribution':
             if not val.strip(): return val
             return json.loads(val)
-        elif key in ['clusters', 'highdim_size', 'lowdim_size']:
+        elif key in ['clusters', 'highdim_size', 'lowdim_size',
+                     'silhouette_samples']:
             return int(val)
         elif key in ['calinski_harabasz', 'davies_bouldin', 'silhouette',
-                     'silhouette_samples', 'psq_count', 'psq_score',
-                     'psq_score_zoom' ]:
+                     'psq_count', 'psq_score', 'psq_score_zoom' ]:
             return float(val)
         else: raise ValueError(f"Unknown key '{key}'")
     lines = map(lambda x: x.split('\t'), iter(f))
