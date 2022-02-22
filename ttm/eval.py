@@ -307,7 +307,7 @@ def _cli(argv, infile, outfile):
             result.calinski_harabasz = None
             result.davies_bouldin = None
             result.silhouette = None
-        if 'psq_pairs' in opts:
+        if 'psq_pairs' in opts and result.clusters > 0:
             result.psq_count = psq_count(f, opts['psq_pairs'])
             if len(result.cluster_distribution) > 1:
                 result.psq_score, result.psq_score_zoom = \
