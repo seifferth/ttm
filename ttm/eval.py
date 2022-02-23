@@ -164,6 +164,13 @@ Command Options
                 option. Among other things, this allows to convert saved
                 tsv-formatted evaluation results to the text format which
                 features histograms.
+    --skip-separation-metrics
+                Do not calculate the cluster separation metrics. I. e.
+                the calinski-harabasz score, davies-bouldin score and
+                silhouette coefficient. This may be necessary if the
+                lowdim representation of the corpus does not fit into
+                memory as a dense matrix, or it may simply be convenient
+                if those metrics are not needed.
     --silhouette-metric METRIC
                 Distance metric used for calculating the silhouette
                 coefficient. For a full list of supported metrics see
@@ -287,7 +294,8 @@ def _print_tsv(r: EvaluationResult):
 
 def _cli(argv, infile, outfile):
     all_opts, filenames = getopt(argv, 'hf:', ['help', 'format=', 'include=',
-            'silhouette-metric=', 'silhouette-sample-size=', 'psq-pairs='])
+            'silhouette-metric=', 'silhouette-sample-size=', 'psq-pairs=',
+            'skip-separation-metrics'])
     short2long = { '-h': '--help', '-f': '--format' }
     opts = { short2long.get(k, k).lstrip('-').replace('-', '_'): v
              for k, v in all_opts }
@@ -334,10 +342,13 @@ def _cli(argv, infile, outfile):
                             len(f.column('lowdim', map_f=json.loads).peek())
         except ColumnNotFound:
             result.lowdim_size = None
-        try:
-            X, y = extract_X_y(f)
-        except ColumnNotFound:
+        if 'skip_separation_metrics' in opts:
             X, y = None, None
+        else:
+            try:
+                X, y = extract_X_y(f)
+            except ColumnNotFound:
+                X, y = None, None
         if len(result.cluster_distribution) > 1 and X and y:
             result.calinski_harabasz = calinski_harabasz(X, y)
             result.davies_bouldin = davies_bouldin(X, y)
