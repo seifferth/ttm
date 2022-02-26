@@ -4,7 +4,7 @@ from getopt import getopt
 from .types import *
 from .eval import cluster_distribution
 
-def book(infile: InputFile, cluster_order: list, book: str, res=15) -> str:
+def book(infile: InputFile, cluster_order: list, book: str, res=30) -> str:
     infile.ensure_loaded()
     page_clusters = dict()
     for doc, c in zip(infile.column('id'), infile.column('cluster')):
@@ -70,7 +70,7 @@ def _book(argv, infile):
             if re.search(exp, b):
                 all_books.remove(b)
                 graph = book(infile, cluster_order, b,
-                             res=opts.get('res', 15))
+                             res=opts.get('res', 30))
                 title = indent(fill(b, width=37), '  ')
                 blocks.append(f'{title}\n\n{graph}\n\n\n')
     full_length = sum([ len(b.splitlines()) for b in blocks ])
