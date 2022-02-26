@@ -35,7 +35,7 @@ Commands
                   cluster ids as 'cluster'.
     desc          Create cluster descriptions based on the existing data and
                   store the resulting descriptions in additional columns.
-    eval          Evaluate topic models based on 'cluster' and 'desc'
+    eval          Evaluate topic models based on 'lowdim' and 'cluster'
                   columns.
     comp          Compare two or more topic models, checking for cluster
                   stability or instability.
