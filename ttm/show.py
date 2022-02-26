@@ -72,7 +72,7 @@ def _book(argv, infile):
                 graph = book(infile, cluster_order, b,
                              res=opts.get('res', 15))
                 title = indent(fill(b, width=38), '  ')
-                blocks.append(f'{title}\n\n{graph}\n\n')
+                blocks.append(f'{title}\n\n{graph}\n\n\n')
     full_length = sum([ len(b.splitlines()) for b in blocks ])
     n_cols = opts.get('cols', get_terminal_size().columns // 40)
     cols = [ [] for _ in range(n_cols) ]
@@ -84,6 +84,7 @@ def _book(argv, infile):
             blocks_length = 0; i = 0; n+=1
     cols[n] = blocks    # Catch trailing block
     cols = [ ''.join(c).splitlines() for c in cols ]
+    print()
     for i in range(max(map(len, cols))):
         for c in cols:
             print(f'{c[i] if i < len(c) else "":<40}', end='')
