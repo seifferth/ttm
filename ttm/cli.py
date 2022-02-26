@@ -39,6 +39,8 @@ Commands
                   columns.
     comp          Compare two or more topic models, checking for cluster
                   stability or instability.
+    show          Display certain pieces of information about specific books
+                  in the corpus based on the clustering obtained previously.
 """.lstrip()
 
 def cli(argv):
