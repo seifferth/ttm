@@ -43,18 +43,19 @@ _cli_help="""
 Usage: ttm [OPT]... show SUBCOMMAND [SUBCOMMAND-ARGUMENT]...
 
 Subcommands
-    book [--res=N] REGEX...
+    book [--res=N|--cols=N] REGEX...
         Display an ascii-art rendering of the clusters found in one or more
         books. The REGEX is used to determine which books are displayed. The
         --res parameter specifies how many pages are summarized in any given
-        line.
+        line. The --cols parameter can be used to specify the desired number
+        of columns for displaying multiple books.
 """.lstrip()
 
 def _book(argv, infile):
     from getopt import gnu_getopt
     import re
     from textwrap import fill, indent
-    opts, bookexp = gnu_getopt(argv, '', ['res='])
+    opts, bookexp = gnu_getopt(argv, '', ['res=', 'cols='])
     opts = { k.lstrip('-'): int(v) for k, v in opts }
     if len(bookexp) == 0:
         raise CliError("No REGEX specified for 'ttm show book'")
@@ -72,7 +73,7 @@ def _book(argv, infile):
                 title = indent(fill(b, width=38), '  ')
                 blocks.append(f'{title}\n\n{graph}\n\n')
     full_length = sum([ len(b.splitlines()) for b in blocks ])
-    n_cols = 2
+    n_cols = opts.get('cols', 2)
     cols = [ [] for _ in range(n_cols) ]
     blocks_length = 0; i = 0; n = 0
     while i < len(blocks):
