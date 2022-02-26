@@ -14,7 +14,7 @@ def book(infile: InputFile, cluster_order: list, book: str, res=15) -> str:
     cluster_freq = { c: 0 for c in set(page_clusters.values()) }
     for p, c in page_clusters.items():
         cluster_freq[c] += 1
-    header = f'  {"":>10}   ' + \
+    header = f'  {"":>9}   ' + \
                 ''.join([f'{c[:2]:>2} ' for c in cluster_order])
     result = [ header ]
     pages = sorted(page_clusters.keys())
@@ -26,7 +26,7 @@ def book(infile: InputFile, cluster_order: list, book: str, res=15) -> str:
             if fst == None: fst = p
             clusters_found[page_clusters[p]] += 1
         lst = p
-        line = [ f'  {str(fst)+"-"+str(lst):>10}  |' ]
+        line = [ f'  {str(fst)+"-"+str(lst):>9}  |' ]
         for c in cluster_order:
             if clusters_found[c]/res == 0:     line.append('   ')
             elif clusters_found[c]/res <= 1/6: line.append(' - ')
@@ -53,6 +53,7 @@ Subcommands
 def _book(argv, infile):
     from getopt import gnu_getopt
     import re
+    from textwrap import fill, indent
     opts, bookexp = gnu_getopt(argv, '', ['res='])
     opts = { k.lstrip('-'): int(v) for k, v in opts }
     if len(bookexp) == 0:
@@ -61,14 +62,26 @@ def _book(argv, infile):
     cluster_order = [ c for _, c in sorted([(f, c) for c, f
                         in cluster_dist.items()], reverse=True) ]
     all_books = { d.split(':')[0] for d in infile.column('id') }
+    blocks = []
     for exp in bookexp:
         for b in sorted(all_books):
             if re.search(exp, b):
                 all_books.remove(b)
                 graph = book(infile, cluster_order, b,
                              res=opts.get('res', 15))
-                print(b, end='\n\n')
-                print(graph, end='\n\n')
+                title = indent(fill(b, width=38), '  ')
+                blocks.append(f'{title}\n\n{graph}\n\n')
+    full_length = sum([ len(b.splitlines()) for b in blocks ])
+    blocks_length = 0; i = 0
+    for _ in range(len(blocks)):
+        blocks_length += len(blocks[i].splitlines()); i+=1
+        if blocks_length > full_length / 2: break
+    col_a = ''.join(blocks[:i]).splitlines()
+    col_b = ''.join(blocks[i:]).splitlines()
+    for i in range(max(map(len, [col_a, col_b]))):
+        print(f'{col_a[i] if i < len(col_a) else "":<40}', end='')
+        print(f'{col_b[i] if i < len(col_b) else "":<40}', end='')
+        print()
 
 def _cli(argv, infile, outfile):
     opts, subcmd = getopt(argv, 'h', ['help'])
