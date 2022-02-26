@@ -71,10 +71,10 @@ def _book(argv, infile):
                 all_books.remove(b)
                 graph = book(infile, cluster_order, b,
                              res=opts.get('res', 15))
-                title = indent(fill(b, width=38), '  ')
+                title = indent(fill(b, width=37), '  ')
                 blocks.append(f'{title}\n\n{graph}\n\n\n')
     full_length = sum([ len(b.splitlines()) for b in blocks ])
-    n_cols = opts.get('cols', get_terminal_size().columns // 40)
+    n_cols = opts.get('cols', (get_terminal_size().columns+1) // 40)
     cols = [ [] for _ in range(n_cols) ]
     blocks_length = 0; i = 0; n = 0
     while i < len(blocks):
