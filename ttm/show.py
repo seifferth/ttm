@@ -72,15 +72,19 @@ def _book(argv, infile):
                 title = indent(fill(b, width=38), '  ')
                 blocks.append(f'{title}\n\n{graph}\n\n')
     full_length = sum([ len(b.splitlines()) for b in blocks ])
-    blocks_length = 0; i = 0
-    for _ in range(len(blocks)):
+    n_cols = 2
+    cols = [ [] for _ in range(n_cols) ]
+    blocks_length = 0; i = 0; n = 0
+    while i < len(blocks):
         blocks_length += len(blocks[i].splitlines()); i+=1
-        if blocks_length > full_length / 2: break
-    col_a = ''.join(blocks[:i]).splitlines()
-    col_b = ''.join(blocks[i:]).splitlines()
-    for i in range(max(map(len, [col_a, col_b]))):
-        print(f'{col_a[i] if i < len(col_a) else "":<40}', end='')
-        print(f'{col_b[i] if i < len(col_b) else "":<40}', end='')
+        if blocks_length > full_length / n_cols:
+            cols[n], blocks = blocks[:i], blocks[i:]
+            blocks_length = 0; i = 0; n+=1
+    cols[n] = blocks    # Catch trailing block
+    cols = [ ''.join(c).splitlines() for c in cols ]
+    for i in range(max(map(len, cols))):
+        for c in cols:
+            print(f'{c[i] if i < len(c) else "":<40}', end='')
         print()
 
 def _cli(argv, infile, outfile):
