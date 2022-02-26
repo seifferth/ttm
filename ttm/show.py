@@ -55,6 +55,7 @@ def _book(argv, infile):
     from getopt import gnu_getopt
     import re
     from textwrap import fill, indent
+    from shutil import get_terminal_size
     opts, bookexp = gnu_getopt(argv, '', ['res=', 'cols='])
     opts = { k.lstrip('-'): int(v) for k, v in opts }
     if len(bookexp) == 0:
@@ -73,7 +74,7 @@ def _book(argv, infile):
                 title = indent(fill(b, width=38), '  ')
                 blocks.append(f'{title}\n\n{graph}\n\n')
     full_length = sum([ len(b.splitlines()) for b in blocks ])
-    n_cols = opts.get('cols', 2)
+    n_cols = opts.get('cols', get_terminal_size().columns // 40)
     cols = [ [] for _ in range(n_cols) ]
     blocks_length = 0; i = 0; n = 0
     while i < len(blocks):
