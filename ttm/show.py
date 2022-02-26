@@ -79,10 +79,13 @@ def _book(argv, infile):
     blocks_length = 0; i = 0; n = 0
     while i < len(blocks):
         blocks_length += len(blocks[i].splitlines()); i+=1
-        if blocks_length > full_length / n_cols:
+        if blocks_length >= full_length / n_cols:
             cols[n], blocks = blocks[:i], blocks[i:]
+            lastlen = len(cols[n][-1].splitlines())
+            if blocks_length - lastlen/2 > full_length / n_cols:
+                blocks.insert(0, cols[n].pop())
             blocks_length = 0; i = 0; n+=1
-    cols[n] = blocks    # Catch trailing block
+    if blocks: cols[-1].extend(blocks)      # Catch trailing block
     cols = [ ''.join(c).splitlines() for c in cols ]
     print()
     for i in range(max(map(len, cols))):
