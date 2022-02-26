@@ -2,7 +2,7 @@
 
 from getopt import getopt, GetoptError
 from .types import *
-from . import cat, c20cat, embed, redim, cluster, desc, comp
+from . import cat, c20cat, embed, redim, cluster, desc, comp, show
 from . import eval as ttm_eval
 
 _cli_help="""
@@ -55,7 +55,7 @@ def cli(argv):
     opts = { short2long.get(k, k).lstrip('-'): v for k, v in opts }
     # Option processing
     c = { 'cat': cat, '20cat': c20cat, 'embed': embed, 'redim': redim,
-          'cluster': cluster, 'desc': desc, 'eval': ttm_eval,
+          'cluster': cluster, 'desc': desc, 'eval': ttm_eval, 'show': show,
           'comp': comp }
     if 'help' in opts:
         if not cmd:
@@ -71,7 +71,7 @@ def cli(argv):
         for line in infile:
             print(line, file=outfile)
     elif cmd[0] in c:
-        if cmd[0] in ['embed', 'redim', 'cluster', 'desc']:
+        if cmd[0] in ['embed', 'redim', 'cluster', 'desc', 'show']:
             infile = InputFile(opts.get('input', '-'))
         elif 'input' in opts:
             raise CliError(f'ttm {cmd[0]} does accept the --input switch')
