@@ -86,9 +86,10 @@ def _book(argv, infile):
     cols = [ ''.join(c).splitlines() for c in cols ]
     print()
     for i in range(max(map(len, cols))):
+        line = []
         for c in cols:
-            print(f'{c[i] if i < len(c) else "":<40}', end='')
-        print()
+            line.append(f'{c[i] if i < len(c) else "":<40}')
+        print(''.join(line).rstrip())
 
 def _cli(argv, infile, outfile):
     opts, subcmd = getopt(argv, 'h', ['help'])
