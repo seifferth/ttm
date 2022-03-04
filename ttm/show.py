@@ -82,7 +82,7 @@ def _book(argv, infile):
         if blocks_length >= full_length / n_cols:
             cols[n], blocks = blocks[:i], blocks[i:]
             lastlen = len(cols[n][-1].splitlines())
-            if blocks_length - lastlen/2 > full_length / n_cols:
+            if blocks and blocks_length - lastlen/2 > full_length / n_cols:
                 blocks.insert(0, cols[n].pop())
             blocks_length = 0; i = 0; n+=1
     if blocks: cols[-1].extend(blocks)      # Catch trailing block
