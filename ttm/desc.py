@@ -75,6 +75,8 @@ Command Options
                 Default: 5.
     --pure-docs-limit N
                 Include only the N purest docs for each cluster. Default: 5.
+                A limit of -1 will be treated as no limit. This allows to
+                select docs based on a cutoff only.
     --pure-docs-cutoff N
                 Only include docs with at least N of their pages assigned
                 to a given topic. N is a percentage of pages and must lie
@@ -104,7 +106,9 @@ def _cli(argv, infile, outfile):
     for k, v in opts.items():
         if k.startswith('pure_docs_'):
             k = k.replace('pure_docs_', '')
-            if k == 'limit': v = int(v)
+            if k == 'limit':
+                v = int(v)
+                if v < 0: v = None
             if k == 'cutoff': v = float(v)
             pure_docs_opts[k] = v
     desc = dict()
