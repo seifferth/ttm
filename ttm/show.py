@@ -74,7 +74,9 @@ def _book(argv, infile):
                 title = indent(fill(b, width=37), '  ')
                 blocks.append(f'{title}\n\n{graph}\n\n\n')
     full_length = sum([ len(b.splitlines()) for b in blocks ])
-    n_cols = opts.get('cols', (get_terminal_size().columns+1) // 40)
+    max_line = max((max(map(len, b.splitlines())) for b in blocks))
+    col_width = max(40, max_line)
+    n_cols = opts.get('cols', (get_terminal_size().columns+1) // col_width)
     cols = [ [] for _ in range(n_cols) ]
     blocks_length = 0; i = 0; n = 0
     while i < len(blocks):
@@ -91,7 +93,7 @@ def _book(argv, infile):
     for i in range(max(map(len, cols))):
         line = []
         for c in cols:
-            line.append(format(c[i] if i < len(c) else "", str(40)))
+            line.append(format(c[i] if i < len(c) else "", str(col_width)))
         print(''.join(line).rstrip())
 
 def _cli(argv, infile, outfile):
