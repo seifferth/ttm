@@ -91,7 +91,7 @@ def _book(argv, infile):
     for i in range(max(map(len, cols))):
         line = []
         for c in cols:
-            line.append(f'{c[i] if i < len(c) else "":<40}')
+            line.append(format(c[i] if i < len(c) else "", str(40)))
         print(''.join(line).rstrip())
 
 def _cli(argv, infile, outfile):
