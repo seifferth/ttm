@@ -41,8 +41,7 @@ Commands
                   stability or instability.
     show          Display certain bits of information in a human-readable
                   format. This includes ascii-art visualizations of specific
-                  books in the corpus and a markdown rendering of results
-                  produced with 'ttm desc'.
+                  books and a markdown rendering of cluster descriptions.
 """.lstrip()
 
 def cli(argv):
