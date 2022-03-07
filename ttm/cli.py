@@ -87,8 +87,9 @@ def cli(argv):
             outfile = None
         try:
             c[cmd[0]]._cli(argv=cmd[1:], infile=infile, outfile=outfile)
-        except ColumnNotFound as e:
-            raise CliError(f'Error in ttm {cmd[0]}: {str(e)}') from e
+        except (ColumnNotFound, ExpectedRuntimeError) as e:
+            raise ExpectedRuntimeError(f'Error in ttm {cmd[0]}: {str(e)}') \
+                  from e
     else:
         raise CliError(f"Unknown ttm COMMAND '{cmd[0]}'")
 
@@ -102,12 +103,6 @@ def main() -> int:
         return 141
     except KeyboardInterrupt as e:
         return 130
-    except GetoptError as e:
+    except (GetoptError, CliError, ExpectedRuntimeError) as e:
         print(e, file=sys.stderr)
-        return 1
-    except CliError as e:
-        print(e, file=sys.stderr)
-        return 1
-    except ExpectedRuntimeError as e:
-        print('Error:', e, file=sys.stderr)
         return 1

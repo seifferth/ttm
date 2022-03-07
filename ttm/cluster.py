@@ -204,8 +204,8 @@ def _cli(argv, infile, outfile):
                 **method_args
             ))
         except ColumnNotFound as e:
-            raise CliError(f"Unable to split cluster '{split}': " +
-                             str(e)) from e
+            raise ExpectedRuntimeError(f"Unable to split cluster '{split}': "
+                                       f'{str(e)}') from e
         except EmptyColumnError as e:
             raise CliError(f"Cluster '{split}' does not exist") from e
         cluster = ( f'{c}.{next(subclusters)}' if c == split else c
