@@ -172,11 +172,11 @@ class Column():
         try:
             header = next(lines).split('\t')
             if self.column not in header:
-                raise ColumnNotFound(f"The column '{self.column}' does "
+                raise ColumnNotFound(f"Column '{self.column}' does "
                                       'not exist in the input file')
             for c in self.filter_by:
                 if c not in header:
-                    raise ColumnNotFound(f"The column '{c}' does "
+                    raise ColumnNotFound(f"Column '{c}' does "
                                          'not exist in the input file')
             i_col = header.index(self.column)
             i_filters = [ header.index(c) for c in self.filter_by ]
