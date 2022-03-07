@@ -129,7 +129,7 @@ def _cli(argv, infile, outfile):
     if 'help' in opts:
         raise HelpRequested(_cli_help)
     elif len(args) == 0:
-        raise CliError('No METHOD specified for ttm redim')
+        raise CliError('No METHOD specified for ttm cluster')
     def fail_on_rest(rest):
         if rest:
             rest = '\n'.join(rest)
