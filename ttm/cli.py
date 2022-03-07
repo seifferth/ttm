@@ -85,7 +85,10 @@ def cli(argv):
             raise CliError(f'ttm {cmd[0]} does accept the --output switch')
         else:
             outfile = None
-        c[cmd[0]]._cli(argv=cmd[1:], infile=infile, outfile=outfile)
+        try:
+            c[cmd[0]]._cli(argv=cmd[1:], infile=infile, outfile=outfile)
+        except ColumnNotFound as e:
+            raise CliError(f'Error in ttm {cmd[0]}: {str(e)}') from e
     else:
         raise CliError(f"Unknown ttm COMMAND '{cmd[0]}'")
 
