@@ -39,8 +39,10 @@ Commands
                   columns.
     comp          Compare two or more topic models, checking for cluster
                   stability or instability.
-    show          Display certain pieces of information about specific books
-                  in the corpus based on the clustering obtained previously.
+    show          Display certain bits of information in a human-readable
+                  format. This includes ascii-art visualizations of specific
+                  books in the corpus and a markdown rendering of results
+                  produced with 'ttm desc'.
 """.lstrip()
 
 def cli(argv):
