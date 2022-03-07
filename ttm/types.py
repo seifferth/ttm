@@ -12,6 +12,8 @@ class ExpectedRuntimeError(Exception):
     pass
 class ColumnNotFound(Exception):
     pass
+class EmptyColumnError(Exception):
+    pass
 
 def _open(filename, direction):
     """
@@ -147,11 +149,24 @@ class Column():
     calling the `column` method on a givem `InputFile`. If map_f is
     supplied, that function will be applied to every row. This can be
     used to deserialize embedded data formats, such as json.
+
+    The filter_by and filters arguments can be used to select values
+    based on the value of any column in the corpus. filter_by is a list
+    of column names while filters is a list of functions that are applied
+    to those columns to determine inclusion. Any column in the corpus can
+    be used to filter contents.
     """
-    def __init__(self, corpus: InputFile, column: str, map_f=lambda x: x):
+    def __init__(self, corpus: InputFile, column: str, map_f=lambda x: x,
+                 filter_by=[], filters=[]):
         self.corpus = corpus
         self.column = column
         self.map_f = map_f
+        self._len = None
+        self.filter_by = filter_by
+        self.filters = filters
+        if len(filter_by) != len(filters): raise Exception("'filter' and "
+            "'filter_by' must have the same length, but have a length of "
+           f'{len(filter_by)} and {len(filters)} respectively')
     def __iter__(self):
         lines = iter(self.corpus)
         try:
@@ -159,13 +174,26 @@ class Column():
             if self.column not in header:
                 raise ColumnNotFound(f"The column '{self.column}' does "
                                       'not exist in the input file')
+            for c in self.filter_by:
+                if c not in header:
+                    raise ColumnNotFound(f"The column '{c}' does "
+                                         'not exist in the input file')
             i_col = header.index(self.column)
+            i_filters = [ header.index(c) for c in self.filter_by ]
         except StopIteration as e:
             raise ExpectedRuntimeError('Input file is empty') from e
         for line in lines:
-            yield self.map_f(line.split('\t')[i_col])
+            line = line.split('\t')
+            for j, f in enumerate(self.filters):
+                if not f(line[i_filters[j]]): break
+            else:
+                yield self.map_f(line[i_col])
+    def filter(self, column: str, f):
+        return Column(self.corpus, self.column, self.map_f,
+                      [column] + self.filter_by, [f] + self.filters)
     def __len__(self):
-        return len(self.corpus) - 1
+        if self._len == None: self._len = sum((1 for _ in self))
+        return self._len
     def ensure_loaded(self):
         self.corpus.ensure_loaded()
     def peek(self):
@@ -178,7 +206,7 @@ class Column():
         numpy.ndarray, depending on how dense the first few rows of
         the data appear to be.
         """
-        self.ensure_loaded()
+        if len(self) == 0: raise EmptyColumnError()
         entries, zeros = 0, 0
         for _, row in zip(range(10), self):
             entries += len(row)
@@ -191,6 +219,7 @@ class Column():
         map_f deserializes the data to a numerical format supported by
         numpy. Lists of ints or floats work fine, for instance.
         """
+        if len(self) == 0: raise EmptyColumnError()
         n_rows, n_cols = len(self), len(self.peek())
         if dtype == None: dtype = type(self.peek()[0])
         m = np.ndarray((n_rows, n_cols), dtype=dtype)
@@ -203,6 +232,7 @@ class Column():
         works if map_f deserializes the data to a numerical format supported
         by scipy. Lists of ints or floats work fine, for instance.
         """
+        if len(self) == 0: raise EmptyColumnError()
         row, col, data = [], [], []
         for i, v in enumerate(iter(self)):
             for j, cell in enumerate(v):

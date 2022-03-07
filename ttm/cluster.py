@@ -48,7 +48,14 @@ def random(vectors, clusters=10, weights=None, function=None):
     return choices(range(clusters), weights=weights, k=k)
 
 _cli_help="""
-Usage: ttm [OPT]... cluster [--help] METHOD [ARGS]...
+Usage: ttm [OPT]... cluster [COMMAND-OPTION]... METHOD [ARGS]...
+
+Command Options
+    --split CLUSTER
+            Rather than clustering all documents, apply the clustering
+            method to split an existing CLUSTER into subclusters.
+    -h, --help
+            Print this help message and exit.
 
 Methods
     argmax      Use the argmax on 'lowdim' to assign a single topic to
@@ -123,7 +130,7 @@ Arguments for random
 """.lstrip()
 
 def _cli(argv, infile, outfile):
-    opts, args = getopt(argv, 'h', ['help'])
+    opts, args = getopt(argv, 'h', ['help', 'split='])
     short2long = { '-h': '--help' }
     opts = { short2long.get(k, k).lstrip('-'): v for k, v in opts }
     if 'help' in opts:
@@ -187,9 +194,26 @@ def _cli(argv, infile, outfile):
         raise CliError(f"Unknown ttm cluster METHOD '{args[0]}'")
     # Apply clustering
     lowdim = infile.column('lowdim', map_f=json.loads)
-    print(f'Clustering document vectors with {method.__name__}',
-          file=sys.stderr)
-    cluster = method(lowdim, **method_args)
+    if 'split' in opts:
+        split = opts['split']
+        print(f"Splitting cluster '{split}' with {method.__name__}",
+              file=sys.stderr)
+        try:
+            subclusters = iter(method(
+                lowdim.filter('cluster', lambda c: c == split),
+                **method_args
+            ))
+        except ColumnNotFound as e:
+            raise CliError(f"Unable to split cluster '{split}': " +
+                             str(e)) from e
+        except EmptyColumnError as e:
+            raise CliError(f"Cluster '{split}' does not exist") from e
+        cluster = ( f'{c}.{next(subclusters)}' if c == split else c
+                    for c in infile.column('cluster') )
+    else:
+        print(f'Clustering document vectors with {method.__name__}',
+              file=sys.stderr)
+        cluster = method(lowdim, **method_args)
     # Copy result into outfile
     input_lines = iter(infile.strip('cluster'))
     print(f'{next(input_lines)}\t{"cluster"}', file=outfile)
