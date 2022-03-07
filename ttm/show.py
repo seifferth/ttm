@@ -39,6 +39,18 @@ def book(infile: InputFile, cluster_order: list, book: str, res=30) -> str:
     result.append(header)
     return '\n'.join(result)
 
+def desc(infile, clusters=None) -> dict:
+    cdesc = { c: None for c in clusters }
+    infile.ensure_loaded()
+    for cluster, tfidf_words, pure_docs in zip(
+                infile.column('cluster'), infile.column('tfidf_words'),
+                infile.column('pure_docs')):
+        if cdesc[cluster] == None:
+            cdesc[cluster] = { 'tfidf_words': tfidf_words,
+                               'pure_docs': pure_docs }
+        if None not in cdesc.values(): break
+    return cdesc
+
 _cli_help="""
 Usage: ttm [OPT]... show SUBCOMMAND [SUBCOMMAND-ARGUMENT]...
 
@@ -49,6 +61,9 @@ Subcommands
         --res parameter specifies how many pages are summarized in any given
         line. The --cols parameter can be used to specify the desired number
         of columns for displaying multiple books.
+    desc
+        Deduplicate the cluster descriptions produced with 'ttm desc' and
+        print them to stdout in markdown format.
 """.lstrip()
 
 def _book(argv, infile):
@@ -96,6 +111,34 @@ def _book(argv, infile):
             line.append(format(c[i] if i < len(c) else "", str(col_width)))
         print(''.join(line).rstrip())
 
+def _desc(argv, infile):
+    from textwrap import fill, indent
+    import re
+    if argv: raise CliError("'ttm show desc' takes no further arguments, "
+                           f'but {len(argv)} arguments were supplied')
+    csize = cluster_distribution(infile.column('cluster'), absolute=True)
+    w_cluster = max(9, max([len(str(x)) for x in csize.keys()]))
+    w_pages = max(8, max([len(str(x)) for x in csize.values()]))
+    print(f'  {"Cluster".rjust(w_cluster)}   {"Pages".rjust(w_pages)}'
+          f'   {"Size (%)".rjust(9)}   Histogram')
+    print(f'  {w_cluster*"-"}   {w_pages*"-"}   {9*"-"}   {35*"-"}--')
+    total = sum(csize.values())
+    histscale = 35/(max(csize.values())/total)
+    cs = sorted(csize, key=lambda c: csize[c], reverse=True)
+    for c in cs:
+        relsize = csize[c]/total
+        print(f'  {str(c).rjust(w_cluster)}   {str(csize[c]).rjust(w_pages)}'
+              f'   {100*relsize:9.2f}   ' + round(relsize*histscale)*'*')
+    print('\n  : Overview of clusters and cluster sizes', end='\n\n')
+    cdesc = desc(infile, clusters=cs)
+    for c in cs:
+        print(f'# Cluster {c}\n## tfidf_words', end='\n\n')
+        print(fill(cdesc[c]['tfidf_words'], width=78), end='\n\n')
+        print('## pure_docs', end='\n\n')
+        docs = re.sub(r'( \(1?[0-9]?[0-9]\.[0-9][0-9] %\)), ', r'\1\n',
+                      cdesc[c]['pure_docs'])
+        print(indent(docs, '- '), end='\n\n')
+
 def _cli(argv, infile, outfile):
     opts, subcmd = getopt(argv, 'h', ['help'])
     short2long = { '-h': '--help' }
@@ -105,5 +148,6 @@ def _cli(argv, infile, outfile):
     elif len(subcmd) < 1:
         raise CliError('No SUBCOMMAND provided to ttm show')
     elif subcmd[0] == 'book': _book(subcmd[1:], infile)
+    elif subcmd[0] == 'desc': _desc(subcmd[1:], infile)
     else:
         raise CliError(f"Unknown SUBCOMMAND for ttm show: '{subcmd[0]}'")

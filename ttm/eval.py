@@ -23,11 +23,12 @@ def silhouette(X, y, metric='euclidean', sample_size=.2) -> tuple:
     score = silhouette_score(X, y, metric=metric, sample_size=samples)
     return (score, samples)
 
-def cluster_distribution(cluster: Column) -> dict:
+def cluster_distribution(cluster: Column, absolute: bool=False) -> dict:
     counts = dict()
     for c in cluster:
         if c not in counts: counts[c] = 0
         counts[c] += 1
+    if absolute: return counts
     total = sum(counts.values())
     counts = { k: v/total for k, v in
                sorted(counts.items(), key=lambda x: x[1], reverse=True) }
