@@ -89,6 +89,11 @@ Subcommands
         --res parameter specifies how many pages are summarized in any given
         line. The --cols parameter can be used to specify the desired number
         of columns for displaying multiple books.
+    clusters [REGEX]...
+        Print a markdown table showing clusters and cluster sizes. If a REGEX
+        is specified, only books matching this expression will be considered
+        when counting cluster sizes. This allows to create tables describing
+        parts of the corpus for manual comparison.
     desc
         Deduplicate the cluster descriptions produced with 'ttm desc' and
         print them to stdout in markdown format.
@@ -142,6 +147,34 @@ def _book(argv, infile):
             line.append(format(c[i] if i < len(c) else "", str(col_width)))
         print(''.join(line).rstrip())
 
+def _clusters(argv, infile):
+    from textwrap import fill, indent
+    if argv:
+        books = list(_book_filter(infile, argv))
+        col = infile.column('cluster').filter('id',
+                                        lambda x: x.split(':')[0] in books)
+        if len(books) == 0:
+            raise ExpectedRuntimeError(f'No matches for ' + \
+                    (f"'{argv[0]}'" if len(argv) == 1 else f'any of {argv}'))
+        elif len(books) == 1:
+            caption = 'Overview of clusters and cluster sizes for ' + \
+                      books[0]
+        elif len(books) < 10:
+            caption = 'Overview of clusters and cluster sizes for ' + \
+                      ', '.join(books[:-1]) + ' and ' + books[-1]
+        elif len(argv) == 1:
+            caption = 'Overview of clusters and cluster sizes for ' + \
+                     f"{len(books)} books matching '{argv[0]}'"
+        else:
+            caption = 'Overview of clusters and cluster sizes for ' + \
+                     f'{len(books)} books that matched at least one ' + \
+                     f'of the following regular expressions: {argv}'
+    else:
+        col = infile.column('cluster')
+        caption = 'Overview of all clusters and cluster sizes'
+    print(clusters(col))
+    print('\n' + indent(fill(f': {caption}', width=75), '  '), end='\n\n')
+
 def _desc(argv, infile):
     from textwrap import fill, indent
     import re
@@ -170,5 +203,6 @@ def _cli(argv, infile, outfile):
         raise CliError('No SUBCOMMAND provided to ttm show')
     elif subcmd[0] == 'book': _book(subcmd[1:], infile)
     elif subcmd[0] == 'desc': _desc(subcmd[1:], infile)
+    elif subcmd[0] == 'clusters': _clusters(subcmd[1:], infile)
     else:
         raise CliError(f"Unknown SUBCOMMAND for ttm show: '{subcmd[0]}'")
