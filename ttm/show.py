@@ -172,7 +172,7 @@ def _clusters(argv, infile):
     else:
         col = infile.column('cluster')
         caption = 'Overview of all clusters and cluster sizes'
-    print(clusters(col))
+    print('\n' + clusters(col))
     print('\n' + indent(fill(f': {caption}', width=75), '  '), end='\n\n')
 
 def _desc(argv, infile):
@@ -181,8 +181,8 @@ def _desc(argv, infile):
     if argv: raise CliError("'ttm show desc' takes no further arguments, "
                            f'but {len(argv)} arguments were supplied')
     csize = cluster_distribution(infile.column('cluster'), absolute=True)
-    print(clusters(csize))
-    print('\n  : Overview of clusters and cluster sizes', end='\n\n')
+    print('\n' + clusters(csize))
+    print('\n  : Overview of clusters and cluster sizes', end='\n\n\n')
     cs = sorted(csize, key=lambda c: csize[c], reverse=True)
     cdesc = desc(infile, clusters=cs)
     for c in cs:
