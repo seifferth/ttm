@@ -94,9 +94,17 @@ Subcommands
         print them to stdout in markdown format.
 """.lstrip()
 
+def _book_filter(infile: InputFile, bookexp: list):
+    import re
+    all_books = { d.split(':')[0] for d in infile.column('id') }
+    for exp in bookexp:
+        for b in sorted(all_books):
+            if re.search(exp, b):
+                all_books.remove(b)
+                yield b
+
 def _book(argv, infile):
     from getopt import gnu_getopt
-    import re
     from textwrap import fill, indent
     from shutil import get_terminal_size
     opts, bookexp = gnu_getopt(argv, '', ['res=', 'cols='])
@@ -106,16 +114,11 @@ def _book(argv, infile):
     cluster_dist = cluster_distribution(infile.column('cluster'))
     cluster_order = [ c for _, c in sorted([(f, c) for c, f
                         in cluster_dist.items()], reverse=True) ]
-    all_books = { d.split(':')[0] for d in infile.column('id') }
     blocks = []
-    for exp in bookexp:
-        for b in sorted(all_books):
-            if re.search(exp, b):
-                all_books.remove(b)
-                graph = book(infile, cluster_order, b,
-                             res=opts.get('res', 30))
-                title = indent(fill(b, width=37), '  ')
-                blocks.append(f'{title}\n\n{graph}\n\n\n')
+    for b in _book_filter(infile, bookexp):
+        graph = book(infile, cluster_order, b, res=opts.get('res', 30))
+        title = indent(fill(b, width=37), '  ')
+        blocks.append(f'{title}\n\n{graph}\n\n\n')
     full_length = sum([ len(b.splitlines()) for b in blocks ])
     max_line = max((max(map(len, b.splitlines())) for b in blocks))
     col_width = max(40, max_line)
