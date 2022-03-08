@@ -39,6 +39,34 @@ def book(infile: InputFile, cluster_order: list, book: str, res=30) -> str:
     result.append(header)
     return '\n'.join(result)
 
+def clusters(clusters) -> str:
+    """
+    Create a markdown table showing the cluster size. The argument can
+    be either a Column with cluster IDs or a dict mapping cluster ids
+    to absolute page counts.
+    """
+    t = []
+    if type(clusters) == Column:
+        csize = cluster_distribution(clusters, absolute=True)
+    elif type(clusters) == dict:
+        csize = clusters
+    else:
+        raise Exception("Argument 'clusters' must be of type 'Column' or "
+                       f"'dict', not '{type(clusters)}'")
+    w_cluster = max(9, max([len(str(x)) for x in csize.keys()]))
+    w_pages = max(8, max([len(str(x)) for x in csize.values()]))
+    t.append(f'  {"Cluster".rjust(w_cluster)}   {"Pages".rjust(w_pages)}'
+             f'   {"Size (%)".rjust(9)}   Histogram')
+    t.append(f'  {w_cluster*"-"}   {w_pages*"-"}   {9*"-"}   {35*"-"}--')
+    total = sum(csize.values())
+    histscale = 35/(max(csize.values())/total)
+    for c in sorted(csize, key=lambda c: csize[c], reverse=True):
+        relsize = csize[c]/total
+        t.append(f'  {str(c).rjust(w_cluster)}'
+                 f'   {str(csize[c]).rjust(w_pages)}   {100*relsize:9.2f}'
+                  '   ' + round(relsize*histscale)*'*')
+    return '\n'.join(t)
+
 def desc(infile, clusters=None) -> dict:
     cdesc = { c: None for c in clusters }
     infile.ensure_loaded()
@@ -117,19 +145,9 @@ def _desc(argv, infile):
     if argv: raise CliError("'ttm show desc' takes no further arguments, "
                            f'but {len(argv)} arguments were supplied')
     csize = cluster_distribution(infile.column('cluster'), absolute=True)
-    w_cluster = max(9, max([len(str(x)) for x in csize.keys()]))
-    w_pages = max(8, max([len(str(x)) for x in csize.values()]))
-    print(f'  {"Cluster".rjust(w_cluster)}   {"Pages".rjust(w_pages)}'
-          f'   {"Size (%)".rjust(9)}   Histogram')
-    print(f'  {w_cluster*"-"}   {w_pages*"-"}   {9*"-"}   {35*"-"}--')
-    total = sum(csize.values())
-    histscale = 35/(max(csize.values())/total)
-    cs = sorted(csize, key=lambda c: csize[c], reverse=True)
-    for c in cs:
-        relsize = csize[c]/total
-        print(f'  {str(c).rjust(w_cluster)}   {str(csize[c]).rjust(w_pages)}'
-              f'   {100*relsize:9.2f}   ' + round(relsize*histscale)*'*')
+    print(clusters(csize))
     print('\n  : Overview of clusters and cluster sizes', end='\n\n')
+    cs = sorted(csize, key=lambda c: csize[c], reverse=True)
     cdesc = desc(infile, clusters=cs)
     for c in cs:
         print(f'# Cluster {c}\n## tfidf_words', end='\n\n')
