@@ -153,27 +153,27 @@ def _clusters(argv, infile):
         books = list(_book_filter(infile, argv))
         col = infile.column('cluster').filter('id',
                                         lambda x: x.split(':')[0] in books)
+        cap0 = "Overview of clusters and cluster sizes in " \
+              f"'{infile.filename}' for "
         if len(books) == 0:
             raise ExpectedRuntimeError(f'No matches for ' + \
                     (f"'{argv[0]}'" if len(argv) == 1 else f'any of {argv}'))
         elif len(books) == 1:
-            caption = 'Overview of clusters and cluster sizes for ' + \
-                      books[0]
+            caption = cap0 + books[0]
         elif len(books) < 10:
-            caption = 'Overview of clusters and cluster sizes for ' + \
-                      ', '.join(books[:-1]) + ' and ' + books[-1]
+            caption = cap0 + ', '.join(books[:-1]) + ' and ' + books[-1]
         elif len(argv) == 1:
-            caption = 'Overview of clusters and cluster sizes for ' + \
-                     f"{len(books)} books matching '{argv[0]}'"
+            caption = cap0 + f"{len(books)} books matching '{argv[0]}'"
         else:
-            caption = 'Overview of clusters and cluster sizes for ' + \
-                     f'{len(books)} books that matched at least one ' + \
-                     f'of the following regular expressions: {argv}'
+            caption = cap0 + f'{len(books)} books that matched at least ' \
+                     f'one of the following regular expressions: {argv}'
     else:
         col = infile.column('cluster')
-        caption = 'Overview of all clusters and cluster sizes'
+        caption = 'Overview of all clusters and cluster sizes in ' \
+                 f"'{infile.filename}'"
     print('\n' + clusters(col))
-    print('\n' + indent(fill(f': {caption}', width=75), '  '), end='\n\n')
+    print('\n' + indent(fill(f': {caption}', width=75,
+        break_long_words=False, break_on_hyphens=False), '  '), end='\n\n')
 
 def _desc(argv, infile):
     from textwrap import fill, indent
@@ -181,8 +181,11 @@ def _desc(argv, infile):
     if argv: raise CliError("'ttm show desc' takes no further arguments, "
                            f'but {len(argv)} arguments were supplied')
     csize = cluster_distribution(infile.column('cluster'), absolute=True)
+    caption = 'Overview of clusters and cluster sizes in' \
+             f" '{infile.filename}'"
     print('\n' + clusters(csize))
-    print('\n  : Overview of clusters and cluster sizes', end='\n\n\n')
+    print('\n' + indent(fill(f': {caption}', width=75,
+        break_long_words=False, break_on_hyphens=False), '  '), end='\n\n\n')
     cs = sorted(csize, key=lambda c: csize[c], reverse=True)
     cdesc = desc(infile, clusters=cs)
     for c in cs:

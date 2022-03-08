@@ -106,6 +106,9 @@ class InputFile():
         else:
             self.file_reader = CachingFileReader(filename)
         self.strip_columns = strip_columns
+    @property
+    def filename(self):
+        return self.file_reader.filename
     def __iter__(self):
         if not self.strip_columns:
             for line in self.file_reader:
