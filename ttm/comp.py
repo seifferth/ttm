@@ -12,7 +12,7 @@ def _cluster2doc(f: InputFile) -> dict:
     return cluster2doc
 def _cluster_pairs(f: InputFile):
     for _cluster, docs in _cluster2doc(f).items():
-        for c in combinations(docs, 2):
+        for c in combinations(sorted(docs), 2):
             yield c
 def _kappa(f: InputFile, g: InputFile) -> tuple:
     ids = list(f.column('id'))
