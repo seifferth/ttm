@@ -52,7 +52,7 @@ def _kappa(f: InputFile, g: InputFile) -> tuple:
     kappa = (p_o - p_e) / (1 - p_e)
     zoom = 1 / (1 - p_e)
     return (kappa, zoom)
-def avg_kappa(*infiles: InputFile) -> float:
+def avg_kappa(*infiles: InputFile) -> tuple:
     kappas, zooms = [], []
     for f, g in combinations(infiles, 2):
         k, z = _kappa(f, g)
