@@ -51,7 +51,8 @@ def _kappa(f: InputFile, g: InputFile, sample: set) -> tuple:
     kappa = (p_o - p_e) / (1 - p_e)
     zoom = 1 / (1 - p_e)
     return (kappa, zoom)
-def avg_kappa(*infiles: InputFile, sample_size=1., repeat=1) -> tuple:
+def avg_kappa(*infiles: InputFile, sample_size=1., repeat=1,
+              n_samples=None) -> tuple:
     import random
     docs = None
     for f in infiles:
@@ -62,10 +63,10 @@ def avg_kappa(*infiles: InputFile, sample_size=1., repeat=1) -> tuple:
                 'Found differences in document ids between '
                f"'{last_filename}' and '{f.filename}'")
     kappas, zooms = [], []
+    if n_samples == None: n_samples = round(sample_size*len(docs))
     for _ in range(repeat):
         for f, g in combinations(infiles, 2):
-            sample = set(random.sample(docs, round(sample_size*len(docs))))
-            k, z = _kappa(f, g, sample=sample)
+            k, z = _kappa(f, g, sample=set(random.sample(docs, n_samples)))
             kappas.append(k)
             zooms.append(z)
     avg_k = sum(kappas)/len(kappas)
@@ -140,6 +141,7 @@ def _cli(argv, infile, outfile):
           f'{opts["repeat"]} repetition{"s" if opts["repeat"] > 1 else ""}'
            ' each)')
     print('avg-kappa           ', end='', flush=True)
-    avg_k, dev_k, avg_z, dev_z = avg_kappa(*files, **opts)
+    avg_k, dev_k, avg_z, dev_z = avg_kappa(*files, repeat=opts['repeat'],
+                                           n_samples=n_samples)
     print(f'{avg_k:.4f} \u00B1{dev_k:.4f}  '
           f'(zoom {avg_z:.2f} \u00B1{dev_z:.2f})')
