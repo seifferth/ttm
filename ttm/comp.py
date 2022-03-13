@@ -62,9 +62,9 @@ def avg_kappa(*infiles: InputFile, sample_size: float=1.,
             if sorted(f.column('id')) != docs: raise ExpectedRuntimeError(
                 'Found differences in document ids between '
                f"'{last_filename}' and '{f.filename}'")
-    kappas, zooms = [], []
     if n_samples == None: n_samples = round(sample_size*len(docs))
     sample = set(random.sample(docs, n_samples))
+    kappas, zooms = [], []
     for f, g in combinations(infiles, 2):
         k, z = _kappa(f, g, sample=sample)
         kappas.append(k)
