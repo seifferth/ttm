@@ -126,7 +126,7 @@ def _cli(argv, infile, outfile):
     print(f'{len(files)}    {filenames}')
     print(f'sample-size         {opts["sample_size"]}  ', end='', flush=True)
     n_samples = round(opts['sample_size']*len(files[0].column('id')))
-    print(f'({n_samples} samples)')
+    print(f'({n_samples} documents)')
     print('avg-kappa           ', end='', flush=True)
     avg_k, dev_k, avg_z, dev_z = avg_kappa(*files, n_samples=n_samples)
     print(f'{avg_k:.4f} \u00B1{dev_k:.4f}  '
