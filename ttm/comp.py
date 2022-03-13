@@ -51,8 +51,8 @@ def _kappa(f: InputFile, g: InputFile, sample: set) -> tuple:
     kappa = (p_o - p_e) / (1 - p_e)
     zoom = 1 / (1 - p_e)
     return (kappa, zoom)
-def avg_kappa(*infiles: InputFile, sample_size=1., repeat=1,
-              n_samples=None) -> tuple:
+def avg_kappa(*infiles: InputFile, sample_size: float=1., repeat: int=1,
+              n_samples: int=None) -> tuple:
     import random
     docs = None
     for f in infiles:
