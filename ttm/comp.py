@@ -63,8 +63,8 @@ def avg_kappa(*infiles: InputFile, sample_size=1., repeat=1) -> tuple:
                f"'{last_filename}' and '{f.filename}'")
     kappas, zooms = [], []
     for _ in range(repeat):
-        sample = set(random.sample(docs, round(sample_size*len(docs))))
         for f, g in combinations(infiles, 2):
+            sample = set(random.sample(docs, round(sample_size*len(docs))))
             k, z = _kappa(f, g, sample=sample)
             kappas.append(k)
             zooms.append(z)
