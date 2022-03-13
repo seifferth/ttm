@@ -51,7 +51,7 @@ def _kappa(f: InputFile, g: InputFile, sample: set) -> tuple:
     kappa = (p_o - p_e) / (1 - p_e)
     zoom = 1 / (1 - p_e)
     return (kappa, zoom)
-def avg_kappa(*infiles: InputFile, sample_size: float=1., repeat: int=1,
+def avg_kappa(*infiles: InputFile, sample_size: float=1.,
               n_samples: int=None) -> tuple:
     import random
     docs = None
@@ -64,11 +64,10 @@ def avg_kappa(*infiles: InputFile, sample_size: float=1., repeat: int=1,
                f"'{last_filename}' and '{f.filename}'")
     kappas, zooms = [], []
     if n_samples == None: n_samples = round(sample_size*len(docs))
-    for _ in range(repeat):
-        for f, g in combinations(infiles, 2):
-            k, z = _kappa(f, g, sample=set(random.sample(docs, n_samples)))
-            kappas.append(k)
-            zooms.append(z)
+    for f, g in combinations(infiles, 2):
+        k, z = _kappa(f, g, sample=set(random.sample(docs, n_samples)))
+        kappas.append(k)
+        zooms.append(z)
     avg_k = sum(kappas)/len(kappas)
     dev_k = (sum( (k - avg_k)**2 for k in kappas) / len(kappas))**.5
     avg_z = sum(zooms)/len(zooms)
@@ -101,17 +100,12 @@ Command Options
                 The relative sample size to draw from the data when
                 calculating avg-kappa. This value must lie between 0
                 and 1. Default: 1.
-    --repeat N
-                Calculate kappa N times for each pair of files. This
-                can be used to improve the accuracy of results for
-                small sample sizes. Default: 1.
     -h, --help
                 Print this help message and exit.
 """.lstrip()
 
 def _cli(argv, infile, outfile):
-    opts, filenames = gnu_getopt(argv, 'h', ['help', 'sample-size=',
-                                 'repeat='])
+    opts, filenames = gnu_getopt(argv, 'h', ['help', 'sample-size='])
     short2long = { '-h': '--help' }
     opts = { short2long.get(k, k).lstrip('-').replace('-', '_'): v
              for k, v in opts }
@@ -127,21 +121,13 @@ def _cli(argv, infile, outfile):
             opts[k] = float(opts[k])
             if opts[k] < 0 or opts[k] > 1:
                 raise CliError('--sample-size must lie between 0 and 1')
-    for k in ['repeat']:
-        if k not in opts: opts[k] = 1
-        else: opts[k] = int(opts[k])
     files = [ InputFile(f) for f in filenames ]
     print('models              ', end='', flush=True)
     print(f'{len(files)}    {filenames}')
     print(f'sample-size         {opts["sample_size"]}  ', end='', flush=True)
     n_samples = round(opts['sample_size']*len(files[0].column('id')))
     print(f'({n_samples} samples)')
-    print(f'comparisons         {len(files)*opts["repeat"]}  '
-          f'({len(list(combinations(files, 2)))} model combinations, '
-          f'{opts["repeat"]} repetition{"s" if opts["repeat"] > 1 else ""}'
-           ' each)')
     print('avg-kappa           ', end='', flush=True)
-    avg_k, dev_k, avg_z, dev_z = avg_kappa(*files, repeat=opts['repeat'],
-                                           n_samples=n_samples)
+    avg_k, dev_k, avg_z, dev_z = avg_kappa(*files, n_samples=n_samples)
     print(f'{avg_k:.4f} \u00B1{dev_k:.4f}  '
           f'(zoom {avg_z:.2f} \u00B1{dev_z:.2f})')
