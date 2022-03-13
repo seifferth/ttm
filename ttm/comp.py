@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from getopt import getopt
+from getopt import gnu_getopt
 from .types import *
 from .eval import cluster_distribution, bucket_probability
 from itertools import combinations
@@ -109,7 +109,8 @@ Command Options
 """.lstrip()
 
 def _cli(argv, infile, outfile):
-    opts, filenames = getopt(argv, 'h', ['help', 'sample-size=', 'repeat='])
+    opts, filenames = gnu_getopt(argv, 'h', ['help', 'sample-size=',
+                                 'repeat='])
     short2long = { '-h': '--help' }
     opts = { short2long.get(k, k).lstrip('-').replace('-', '_'): v
              for k, v in opts }

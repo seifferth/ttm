@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from getopt import getopt
+from getopt import gnu_getopt
 from .types import *
 import json
 
@@ -294,9 +294,9 @@ def _print_tsv(r: EvaluationResult):
     print(*row, sep='\t', end='\n')
 
 def _cli(argv, infile, outfile):
-    all_opts, filenames = getopt(argv, 'hf:', ['help', 'format=', 'include=',
-            'silhouette-metric=', 'silhouette-sample-size=', 'psq-pairs=',
-            'skip-separation-metrics'])
+    all_opts, filenames = gnu_getopt(argv, 'hf:', ['help', 'format=',
+            'include=', 'silhouette-metric=', 'silhouette-sample-size=',
+            'psq-pairs=', 'skip-separation-metrics'])
     short2long = { '-h': '--help', '-f': '--format' }
     opts = { short2long.get(k, k).lstrip('-').replace('-', '_'): v
              for k, v in all_opts }

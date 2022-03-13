@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from getopt import getopt
+from getopt import getopt, gnu_getopt
 from .types import *
 import sys, json
 
@@ -124,13 +124,13 @@ def _cli(argv, infile, outfile):
         fail_on_rest(args[1:])
         method, method_args = id, {}
     elif args[0] == 'svd':
-        svd_opts, rest = getopt(args[1:], '', ['components='])
+        svd_opts, rest = gnu_getopt(args[1:], '', ['components='])
         fail_on_rest(rest)
         svd_opts = { k.lstrip('-'): int(v) for k, v in svd_opts }
         method, method_args = svd, svd_opts
     elif args[0] == 'lda':
-        lda_opts, rest = getopt(args[1:], '', ['components=',
-                                'max-epochs=', 'shift'])
+        lda_opts, rest = gnu_getopt(args[1:], '', ['components=',
+                                    'max-epochs=', 'shift'])
         fail_on_rest(rest)
         lda_opts = { k.lstrip('-').replace('-', '_'): v
                      for k, v in lda_opts }
@@ -140,8 +140,8 @@ def _cli(argv, infile, outfile):
             if k in lda_opts: lda_opts[k] = True
         method, method_args = lda, lda_opts
     elif args[0] == 'umap':
-        umap_opts, rest = getopt(args[1:], '', ['components=',
-                                 'neighbors=', 'metric=', 'min-dist='])
+        umap_opts, rest = gnu_getopt(args[1:], '', ['components=',
+                                     'neighbors=', 'metric=', 'min-dist='])
         fail_on_rest(rest)
         umap_opts = { k.lstrip('-').replace('-', '_'): v
                       for k, v in umap_opts }

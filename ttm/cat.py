@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from getopt import getopt
+from getopt import gnu_getopt
 from .types import *
 import os, re
 
@@ -90,7 +90,7 @@ Command Options
 """.lstrip()
 
 def _cli(argv, infile, outfile):
-    opts, args = getopt(argv, 'hw:s:', ['help', 'window=', 'step='])
+    opts, args = gnu_getopt(argv, 'hw:s:', ['help', 'window=', 'step='])
     short2long = { '-h': '--help', '-w': '--window', '-s': '--step' }
     opts = { short2long.get(k, k).lstrip('-'): v for k, v in opts }
     if 'help' in opts:

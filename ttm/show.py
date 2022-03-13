@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from getopt import getopt
+from getopt import getopt, gnu_getopt
 from .types import *
 from .eval import cluster_distribution
 
@@ -109,7 +109,6 @@ def _book_filter(infile: InputFile, bookexp: list):
                 yield b
 
 def _book(argv, infile):
-    from getopt import gnu_getopt
     from textwrap import fill, indent
     from shutil import get_terminal_size
     opts, bookexp = gnu_getopt(argv, '', ['res=', 'cols='])

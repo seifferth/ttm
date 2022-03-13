@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from getopt import getopt
+from getopt import gnu_getopt
 from .types import *
 
 def tfidf_words(infile: InputFile, limit=10, min_df=5):
@@ -84,9 +84,9 @@ Command Options
 """.lstrip()
 
 def _cli(argv, infile, outfile):
-    opts, rest = getopt(argv, 'h', ['help', 'tfidf-words-limit=',
-                        'tfidf-words-min-df=', 'pure-docs-limit=',
-                        'pure-docs-cutoff='])
+    opts, rest = gnu_getopt(argv, 'h', ['help', 'tfidf-words-limit=',
+                            'tfidf-words-min-df=', 'pure-docs-limit=',
+                            'pure-docs-cutoff='])
     short2long = { '-h': '--help' }
     opts = { short2long.get(k, k).lstrip('-').replace('-', '_'): v
              for k, v in opts }

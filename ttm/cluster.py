@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from getopt import getopt
+from getopt import getopt, gnu_getopt
 from .types import *
 import sys, json
 
@@ -145,22 +145,22 @@ def _cli(argv, infile, outfile):
         fail_on_rest(args[1:])
         method, method_args = argmax, {}
     elif args[0] == 'aggl':
-        aggl_opts, rest = getopt(args[1:], '', ['clusters=', 'affinity=',
-                                 'linkage='])
+        aggl_opts, rest = gnu_getopt(args[1:], '', ['clusters=', 'affinity=',
+                                     'linkage='])
         fail_on_rest(rest)
         aggl_opts = { k.lstrip('-'): v for k, v in aggl_opts }
         for k in ['clusters']:
             if k in aggl_opts: aggl_opts[k] = int(aggl_opts[k])
         method, method_args = aggl, aggl_opts
     elif args[0] == 'kmeans':
-        kmeans_opts, rest = getopt(args[1:], '', ['clusters=', 'init='])
+        kmeans_opts, rest = gnu_getopt(args[1:], '', ['clusters=', 'init='])
         fail_on_rest(rest)
         kmeans_opts = { k.lstrip('-'): v for k, v in kmeans_opts }
         for k in ['clusters']:
             if k in kmeans_opts: kmeans_opts[k] = int(kmeans_opts[k])
         method, method_args = kmeans, kmeans_opts
     elif args[0] == 'hdbscan':
-        hdbscan_opts, rest = getopt(args[1:], '',
+        hdbscan_opts, rest = gnu_getopt(args[1:], '',
             ['metric=', 'cluster-selection-method=', 'min-cluster-size='])
         fail_on_rest(rest)
         hdbscan_opts = { k.lstrip('-').replace('-', '_'): v
@@ -169,7 +169,7 @@ def _cli(argv, infile, outfile):
             if k in hdbscan_opts: hdbscan_opts[k] = int(hdbscan_opts[k])
         method, method_args = hdbscan, hdbscan_opts
     elif args[0] == 'random':
-        random_opts, rest = getopt(args[1:], '',
+        random_opts, rest = gnu_getopt(args[1:], '',
             ['clusters=', 'weights=', 'function='])
         fail_on_rest(rest)
         random_opts = { k.lstrip('-'): v for k, v in random_opts }
