@@ -62,7 +62,7 @@ def avg_kappa(*infiles: InputFile, sample_size=1., repeat=1) -> tuple:
                 'Found differences in document ids between '
                f"'{last_filename}' and '{f.filename}'")
     kappas, zooms = [], []
-    for i in range(repeat):
+    for _ in range(repeat):
         sample = set(random.sample(docs, round(sample_size*len(docs))))
         for f, g in combinations(infiles, 2):
             k, z = _kappa(f, g, sample=sample)
