@@ -64,8 +64,9 @@ def avg_kappa(*infiles: InputFile, sample_size: float=1.,
                f"'{last_filename}' and '{f.filename}'")
     kappas, zooms = [], []
     if n_samples == None: n_samples = round(sample_size*len(docs))
+    sample = set(random.sample(docs, n_samples))
     for f, g in combinations(infiles, 2):
-        k, z = _kappa(f, g, sample=set(random.sample(docs, n_samples)))
+        k, z = _kappa(f, g, sample=sample)
         kappas.append(k)
         zooms.append(z)
     avg_k = sum(kappas)/len(kappas)
