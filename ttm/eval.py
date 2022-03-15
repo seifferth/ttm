@@ -327,6 +327,7 @@ def _cli(argv, infile, outfile):
                 raise CliError("Unknown FORMAT '{}'".format(opts['format']))
     for f, name in zip(files, filenames):
         result = EvaluationResult(name)
+        f.ensure_loaded()
         try:
             result.cluster_distribution = \
                                 cluster_distribution(f.column('cluster'))
