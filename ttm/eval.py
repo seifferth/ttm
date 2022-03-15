@@ -237,11 +237,11 @@ def _print_text(r: EvaluationResult):
     if r.highdim_size == None:
         print(f'  highdim-size             N/A')
     else:
-        print(f'  highdim-size          {r.highdim_size}')
+        print(f'  highdim-size  {r.highdim_size:>14}')
     if r.lowdim_size == None:
         print(f'  lowdim-size              N/A')
     else:
-        print(f'  lowdim-size           {r.lowdim_size}')
+        print(f'  lowdim-size   {r.lowdim_size:>14}')
     if r.calinski_harabasz == None:
         print(f'  calinski-harabasz  undefined')
     else:
