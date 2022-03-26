@@ -49,7 +49,7 @@ def svd(vectors, components=5):
     from sklearn.decomposition import TruncatedSVD
     print('Applying SVD ...', end='', file=sys.stderr, flush=True)
     result = TruncatedSVD(
-            n_components = 5,
+            n_components = components,
             algorithm = 'arpack',   # Should produce deterministic results
         ).fit_transform(vectors.matrix(dtype=float))
     print(' done', end='\n', file=sys.stderr, flush=True)
