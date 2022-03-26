@@ -77,13 +77,13 @@ def cli(argv):
         if cmd[0] in ['embed', 'redim', 'cluster', 'desc', 'show']:
             infile = InputFile(opts.get('input', '-'))
         elif 'input' in opts:
-            raise CliError(f'ttm {cmd[0]} does accept the --input switch')
+            raise CliError(f'ttm {cmd[0]} does not accept the --input switch')
         else:
             infile = None
         if cmd[0] in ['cat', '20cat', 'embed', 'redim', 'cluster', 'desc']:
             outfile = OutputFile(opts.get('output', '-'))
         elif 'output' in opts:
-            raise CliError(f'ttm {cmd[0]} does accept the --output switch')
+            raise CliError(f'ttm {cmd[0]} does not accept the --output switch')
         else:
             outfile = None
         try:
