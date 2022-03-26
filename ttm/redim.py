@@ -56,7 +56,7 @@ def svd(vectors, components=5):
     return result.tolist()
 
 _cli_help="""
-Usage: ttm [OPT]... redim [--help] METHOD [ARG]...
+Usage: ttm [OPT]... redim [COMMAND-OPTION]... METHOD [ARG]...
 
 Methods
     id          Use the identity function to map 'highdim' vectors to
@@ -74,6 +74,17 @@ Methods
                 BERTopic. The default arguments are the ones used by Dimo
                 Angelov. Maarten Grootendorst's BERTopic uses almost the
                 same values but sets --min-dist to 0.
+
+Command Options
+    -c COLUMN, --input-column COLUMN
+            Rather than 'highdim', use COLUMN as the input column name.
+            Using --input-column in combination with --output-column
+            allows to apply multiple dimenisionality reduction steps on
+            top of one another.
+    -C COLUMN, --output-column COLUMN
+            Rather than 'lowdim', use COLUMN as the output column name.
+    -h, --help
+            Print this help message and exit.
 
 Arguments for 'svd'
     --components N      Number of dimensions in the 'lowdim' vector.
@@ -109,9 +120,12 @@ Arguments for 'umap'
 """.lstrip()
 
 def _cli(argv, infile, outfile):
-    opts, args = getopt(argv, 'h', ['help'])
-    short2long = { '-h': '--help' }
-    opts = { short2long.get(k, k).lstrip('-'): v for k, v in opts }
+    opts, args = getopt(argv, 'c:C:h', ['input-column=', 'output-column=',
+                                        'help'])
+    short2long = { '-c': '--input-column', '-C': '--output-column',
+                   '-h': '--help' }
+    opts = { short2long.get(k, k).lstrip('-').replace('-', '_'): v
+             for k, v in opts }
     if 'help' in opts:
         raise HelpRequested(_cli_help)
     elif len(args) == 0:
@@ -153,11 +167,13 @@ def _cli(argv, infile, outfile):
     else:
         raise CliError(f"Unknown ttm redim METHOD '{args[0]}'")
     # Apply dimensionality reduction
-    highdim = infile.column('highdim', map_f=json.loads)
+    incol = opts.get('input_column', 'highdim')
+    outcol = opts.get('output_column', 'lowdim')
+    highdim = infile.column(incol, map_f=json.loads)
     lowdim = method(highdim, **method_args)
     # Copy result into outfile
     infile.ensure_loaded()
-    input_lines = iter(infile.strip('lowdim'))
-    print(f'{next(input_lines)}\t{"lowdim"}', file=outfile)
+    input_lines = iter(infile.strip(outcol))
+    print(f'{next(input_lines)}\t{outcol}', file=outfile)
     for line, v in zip(input_lines, lowdim):
         print(f'{line}\t{json.dumps(v)}', file=outfile)
