@@ -1,7 +1,7 @@
 # ttm – Tsv-based Topic Modelling CLI
 
-This repository contains some scripts which wrap selected pieces from
-a number of python libraries in order to provide a somewhat consistent
+This repository contains some scripts which wrap select pieces from a
+number of python libraries in order to provide a somewhat consistent
 interface to topic modelling.
 
 Topic Modelling is approached as an exercise in document clustering.
