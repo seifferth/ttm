@@ -37,7 +37,7 @@ text files with somewhat sensible file names. Each of these files will be
 split into a number of smaller documents and assigned an id that contains
 the filename and an index within that file. `ttm embed` may take more than
 one embedding method as its argument. If multiple embeddings are specified
-(e. g. `ttm embed doc2vec bert`), these embeddings are concatenated.
+(e. g. `ttm embed doc2vec sbert`), these embeddings are concatenated.
 
 In addition to the steps described above, there is a `ttm eval` step that
 can be used to calculate a number of evaluation metrics for one or more
