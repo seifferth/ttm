@@ -26,7 +26,7 @@ Topic Modelling with ttm consists of four main steps:
 There are a number of different options for each of these steps. One
 example pipeline could look like this:
 
-    ttm cat corpus_dir |
+    ttm cat docs corpus_dir |
         ttm embed doc2vec |
         ttm redim umap |
         ttm cluster hdbscan |
