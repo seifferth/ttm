@@ -29,7 +29,7 @@ example pipeline could look like this:
     ttm cat docs corpus_dir |
         ttm embed doc2vec |
         ttm redim umap |
-        ttm cluster hdbscan |
+        ttm cluster kmeans |
         ttm desc > result.tsv
 
 `corpus_dir` is assumed to be a directory containing one or more plain
