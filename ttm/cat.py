@@ -83,8 +83,8 @@ Command Options
             to create overlapping document representations. Overlapping
             documents are never returned as sequential pages. In order for
             this to work, the window needs to be divisible by step, so that
-            some number of steps will add up to a window. Default: Half the
-            specified window size.
+            some number of steps will add up to a window. Default: The same
+            as the specified window size (i. e. non-overlapping windows).
     -h, --help
             Print this help message and exit.
 """.lstrip()
@@ -102,14 +102,7 @@ def _cli(argv, infile, outfile):
     elif not os.path.isdir(args[1]):
         raise CliError(f"Directory '{args[1]}' not found")
     window = int(opts.get('window', 300))
-    if 'step' in opts:
-        step = int(opts.get('step'))
-    elif window % 2 == 0:
-        step = window // 2
-    else:
-        raise CliError('The step was not specified and should default to '
-                      f'half the window size,\nbut {window} is not an even '
-                       'number.')
+    step = window if 'step' not in opts else int(opts.get('step'))
     if window % step != 0:
         w, s = window, step
         low_w, high_w = (w//s)*s, ((w//s)+1)*s
