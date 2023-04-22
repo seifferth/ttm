@@ -5,7 +5,7 @@ with open('readme.md', 'r', encoding='utf-8') as f:
 
 setup(
     name='ttm',
-    version='0.0.0-dev',
+    version='0.1.0.dev',
     packages=['ttm'],
     entry_points={'console_scripts': [
         'ttm = ttm.cli:main'
