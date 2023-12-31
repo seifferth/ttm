@@ -12,7 +12,7 @@ setup(
     ]},
     python_requires='>=3.7',
     install_requires=[
-        'numpy', 'scipy', 'tqdm', 'sklearn', 'gensim', 'flair',
+        'numpy', 'scipy', 'tqdm', 'scikit-learn', 'gensim', 'flair',
         'umap-learn', 'hdbscan', 'sentence-transformers'
     ],
     author='Frank Seifferth',

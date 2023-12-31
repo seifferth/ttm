@@ -96,7 +96,7 @@ The following python packages are required for ttm's main functionality,
 but may be overlooked if the specific functionality they introduce is
 not used:
 
-- sklearn (used in ttm.embed.bow, ttm.embed.tfidf, ttm.redim.lda,
+- scikit-learn (used in ttm.embed.bow, ttm.embed.tfidf, ttm.redim.lda,
   ttm.redim.svd, ttm.cluster.aggl, ttm.cluster.kmeans, ttm.desc, ttm.eval)
 - gensim (used in ttm.embed.doc2vec)
 - flair (used in ttm.embed.bert, ttm.embed.sbert, ttm.embed.pool)
