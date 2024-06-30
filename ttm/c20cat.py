@@ -12,20 +12,20 @@ def docs():
     """
     Load the 20 newsgroups dataset via sklearn and return an iterator
     over all documents. The resulting iterator yields tuples of the
-    following format: (doc_id, n_tokens, n_chars, content)
+    following format: (doc_id, newsgroup, n_tokens, n_chars, content)
     """
     from sklearn.datasets import fetch_20newsgroups
     groups = fetch_20newsgroups(subset='all', shuffle=False,
                                 remove=('headers','footers','quotes'))
     docs = ( _normalize(d) for d in groups.data )
     labels = ( groups.target_names[i] for i in groups.target )
-    label_is = { label: 0 for label in groups.target_names }
+    msg_number = { label: 0 for label in groups.target_names }
     for content, group_label in zip(docs, labels):
-        label_is[group_label] += 1
-        doc_id = f'{group_label}:{label_is[group_label]}'
+        msg_number[group_label] += 1
+        doc_id = f'{group_label}.message-{msg_number[group_label]:03d}'
         n_chars = len(content)
         n_tokens = len(content.split())
-        yield (doc_id, n_tokens, n_chars, content)
+        yield (doc_id, group_label, n_tokens, n_chars, content)
 
 _cli_help="""
 Usage: ttm [OPT]... 20cat [--help]
@@ -40,9 +40,11 @@ def _cli(argv, infile, outfile):
     opts = { short2long.get(k, k).lstrip('-'): v for k, v in opts }
     if 'help' in opts:
         raise HelpRequested(_cli_help)
-    print('id', 'n_tokens', 'n_chars', 'content', sep='\t', file=outfile)
-    for doc_id, n_tokens, n_chars, content in docs():
+    print('id', 'newsgroup', 'n_tokens', 'n_chars', 'content',
+                                            sep='\t', file=outfile)
+    for doc_id, newsgroup, n_tokens, n_chars, content in docs():
         if '\t' in doc_id or '\n' in doc_id:
             raise CliError(f"Document id '{doc_id}' contains an invalid "\
                             'character (tab or newline)')
-        print(doc_id, n_tokens, n_chars, content, sep='\t', file=outfile)
+        print(doc_id, newsgroup, n_tokens, n_chars, content,
+                                            sep='\t', file=outfile)
