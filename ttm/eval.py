@@ -23,6 +23,23 @@ def silhouette(X, y, metric='euclidean', sample_size=.2) -> tuple:
     score = silhouette_score(X, y, metric=metric, sample_size=samples)
     return (score, samples)
 
+def psq_distance(infile: InputFile, psq_pairs: PsqPairs,
+                 metric='euclidean', sample_size=1.) -> float:
+    from scipy.spatial.distance import pdist, cdist, euclidean
+    from random import sample
+    infile.ensure_loaded()
+    v = { d: v for d, v in zip(infile.column('id'),
+                               infile.column('lowdim', map_f=json.loads)) }
+    a = [ v[a] for a, _ in psq_pairs ]
+    b = [ v[b] for _, b in psq_pairs ]
+    if len(a) != len(b): raise Exception('Unexpected data length mismatch')
+    subsequent_sum = sum((cdist([v[a]], [v[b]], metric=metric).sum()
+                                                    for a, b in psq_pairs))
+    X = list(v.values()) if sample_size >= 1. else \
+        list(sample(list(v.values()), round(sample_size*len(v))))
+    return ( subsequent_sum / len(a) ) \
+           / ( pdist(X, metric=metric).sum() / (.5 * len(X)**2) )
+
 def cluster_distribution(cluster: Column, absolute: bool=False) -> dict:
     counts = dict()
     for c in cluster:
@@ -136,6 +153,16 @@ Evaluation Metrics
         less cohesion within clusters than in the unclustered dataset. See
         'pydoc sklearn.metrics.silhouette_score' for further information.
 
+    psq-distance
+        Given a list of pages following one another, divide the average
+        distance between any two subsequent pages by the average distance
+        between any two pages (subsequent or not) in the dataset. Possible
+        values range from 0 to +inf. Lower values indicate a better fit
+        between the lowdim vector space and the original corpus. A value
+        of 1 suggests a random distribution of pages within the lowdim
+        vector space. Values above 1 suggest that the lowdim vector space
+        is a worse than random representation of the data.
+
     psq-count
         Given a list of pages following one another, calculate how many
         of these pairs of pages can be found in the same cluster.
@@ -180,6 +207,22 @@ Command Options
     --silhouette-sample-size N
                 The relative number of samples to draw from the data when
                 calculating the silhouette coefficient. Default: 0.2.
+    --skip-psq-distance
+                Do not calculate the psq-distance. This may be convenient
+                if the psq-distance metric is not needed since calculating
+                it is rather computationally expensive.
+    --psq-distance-metric METRIC
+                Distance metric used for calculating the psq-distance. See
+                'pydoc sklearn.metrics.pairwise.pairwise_distances' for a
+                full list of supported metrics. Default: 'euclidean'.
+    --psq-distance-sample-size N
+                The relative number of samples to draw from the data when
+                calculating the average distance between points. Sampling
+                points for estimating the average distance may be necessary
+                because this calculation has a runtime of O(N^2). The
+                distance between subsequent pages will always be calculated
+                fully, since this can be done in O(N). To disable sampling,
+                specify a value of 1.0. Default: 1.0.
     --psq-pairs FILE
                 Header-less tsv-file containing document id pairs
                 representing consecutive pages. The file must contain
@@ -196,15 +239,17 @@ class EvaluationResult():
         self.clusters: int = None
         self.highdim_size: int = None
         self.lowdim_size: int = None
-        self.silhouette_samples: int = None
         self.calinski_harabasz: float = None
         self.davies_bouldin: float = None
         self.silhouette: float = None
+        self.silhouette_samples: int = None
+        self.psq_distance: float = None
+        self.psq_distance_sample_size = None
         self.psq_count: float = None
         self.psq_score: float = None
         self.psq_score_zoom: float = None
 
-def _parse_tsv(f: InputFile) -> EvaluationResult():
+def _parse_tsv(f: InputFile) -> EvaluationResult:
     def _parse_cell(key: str, val: str):
         if val in ['N/A', 'undefined']: return None
         if key == 'model_name': return val
@@ -215,6 +260,7 @@ def _parse_tsv(f: InputFile) -> EvaluationResult():
                      'silhouette_samples']:
             return int(val)
         elif key in ['calinski_harabasz', 'davies_bouldin', 'silhouette',
+                     'psq_distance', 'psq_distance_sample_size',
                      'psq_count', 'psq_score', 'psq_score_zoom' ]:
             return float(val)
         else: raise ValueError(f"Unknown key '{key}'")
@@ -255,6 +301,14 @@ def _print_text(r: EvaluationResult):
     else:
         print(f'  silhouette           {r.silhouette:>7.4f}  '
               f'({r.silhouette_samples} samples)')
+    if r.psq_distance == None:
+        print(f'  psq-distance             N/A')
+    else:
+        if r.psq_distance_sample_size == 1.:
+            print(f'  psq-distance          {r.psq_distance:<.4f}')
+        else:
+            print(f'  psq-distance          {r.psq_distance:<.4f}  '
+                  f'(avg on {r.psq_distance_sample_size} of all points)')
     if r.psq_count == None:
         print(f'  psq-count                N/A')
         print(f'  psq-score                N/A')
@@ -269,6 +323,7 @@ def _print_text(r: EvaluationResult):
 
 _tsv_header = [
             'model_name', 'psq_score', 'psq_score_zoom', 'psq_count',
+            'psq_distance', 'psq_distance_sample_size',
             'silhouette', 'silhouette_samples', 'davies_bouldin',
             'calinski_harabasz', 'highdim_size', 'lowdim_size',
             'clusters', 'cluster_distribution'
@@ -282,12 +337,16 @@ def _print_tsv(r: EvaluationResult):
     if r.davies_bouldin == None: r.davies_bouldin = 'undefined'
     if r.silhouette == None:
         r.silhouette, r.silhouette_samples = 'undefined', 'undefined'
+    if r.psq_distance == None:
+        r.psq_distace, r.psq_distance_sample_size = 'undefined', 'undefined'
     if r.psq_count == None:
+        r.psq_distace, r.psq_distance_sample_size = 'N/A', 'N/A'
         r.psq_count = 'N/A'
         r.psq_score, r.psq_score_zoom = 'N/A', 'N/A'
     elif r.psq_score == None:
         r.psq_score, r.psq_score_zoom = 'undefined', 'undefined'
     row = [ r.model_name, r.psq_score, r.psq_score_zoom, r.psq_count,
+            r.psq_distance, r.psq_distance_sample_size,
             r.silhouette, r.silhouette_samples, r.davies_bouldin,
             r.calinski_harabasz, r.highdim_size, r.lowdim_size,
             r.clusters, json.dumps(r.cluster_distribution) ]
@@ -296,7 +355,8 @@ def _print_tsv(r: EvaluationResult):
 def _cli(argv, infile, outfile):
     all_opts, filenames = gnu_getopt(argv, 'hf:', ['help', 'format=',
             'include=', 'silhouette-metric=', 'silhouette-sample-size=',
-            'psq-pairs=', 'skip-separation-metrics'])
+            'psq-pairs=', 'skip-separation-metrics', 'skip-psq-distance',
+            'psq-distance-metric=', 'psq-distance-sample-size='])
     short2long = { '-h': '--help', '-f': '--format' }
     opts = { short2long.get(k, k).lstrip('-').replace('-', '_'): v
              for k, v in all_opts }
@@ -311,11 +371,16 @@ def _cli(argv, infile, outfile):
     if 'psq_pairs' in opts:
         opts['psq_pairs'] = PsqPairs(opts['psq_pairs'])
     silhouette_opts = dict()
+    psq_distance_opts = dict()
     for k, v in opts.items():
         if k.startswith('silhouette_'):
             k = k.replace('silhouette_', '')
             if k == 'sample_size': v = float(v)
             silhouette_opts[k] = v
+        elif k.startswith('psq_distance_'):
+            k = k.replace('psq_distance_', '')
+            if k == 'sample_size': v = float(v)
+            psq_distance_opts[k] = v
     if opts['format'] == 'tsv': _print_tsv_header()
     for f in opts['include']:
         for result in _parse_tsv(InputFile(f)):
@@ -371,6 +436,13 @@ def _cli(argv, infile, outfile):
         else:
             result.psq_count = None
             result.psq_score, result.psq_score_zoom = None, None
+        if 'psq_pairs' in opts and not 'skip_psq_distance' in opts:
+            result.psq_distance = psq_distance(f, opts['psq_pairs'],
+                                                  **psq_distance_opts)
+            result.psq_distance_sample_size = \
+                                psq_distance_opts.get('sample_size', 1.)
+        else:
+            result.psq_distance, result.psq_distance_sample_size = None, None
         if opts['format'] == 'text':
             _print_text(result)
         elif opts['format'] == 'tsv':
