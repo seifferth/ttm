@@ -33,12 +33,12 @@ def psq_distance(infile: InputFile, psq_pairs: PsqPairs,
     a = [ v[a] for a, _ in psq_pairs ]
     b = [ v[b] for _, b in psq_pairs ]
     if len(a) != len(b): raise Exception('Unexpected data length mismatch')
-    subsequent_sum = sum((cdist([v[a]], [v[b]], metric=metric).sum()
+    page_sum = sum((cdist([v[a]], [v[b]], metric=metric).sum()
                                                     for a, b in psq_pairs))
     X = list(v.values()) if sample_size >= 1. else \
         list(sample(list(v.values()), round(sample_size*len(v))))
-    return ( subsequent_sum / len(a) ) \
-           / ( pdist(X, metric=metric).sum() / (.5 * len(X)**2) )
+    return ( page_sum / len(a) ) \
+           / ( 2 * pdist(X, metric=metric).sum() / (len(X)**2 - len(X)) )
 
 def cluster_distribution(cluster: Column, absolute: bool=False) -> dict:
     counts = dict()
