@@ -17,7 +17,7 @@ def docs():
     from sklearn.datasets import fetch_20newsgroups
     groups = fetch_20newsgroups(subset='all', shuffle=False,
                                 remove=('headers','footers','quotes'))
-    docs = ( _normalize(d) for d in groups.data )
+    docs = filter(bool, ( _normalize(d) for d in groups.data ))
     labels = ( groups.target_names[i] for i in groups.target )
     msg_number = { label: 0 for label in groups.target_names }
     for content, group_label in zip(docs, labels):
