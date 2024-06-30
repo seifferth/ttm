@@ -21,6 +21,21 @@ def tfidf(docs, min_df=.2, max_df=.5):
     for v in vs:
         yield v.toarray().flatten().tolist()
 
+def lda(docs, min_df=.0, max_df=1., max_epochs=40, vector_size=300):
+    from sklearn.feature_extraction.text import CountVectorizer
+    from sklearn.decomposition import LatentDirichletAllocation
+    print('\rLDA: Creating bag of words representation',
+          10*' ', file=sys.stderr)
+    vs = CountVectorizer(min_df=min_df, max_df=max_df).fit_transform(docs)
+    print('\rLDA: Running Latent Dirichlet Allocation algorithm',
+          10*' ', file=sys.stderr)
+    vs = LatentDirichletAllocation(
+        max_iter=max_epochs,
+        n_components=vector_size,
+    ).fit_transform(vs)
+    for v in vs:
+        yield v.tolist()
+
 def doc2vec(docs, vector_size=300, min_count=50, window=15, sample=1e-5,
             negative=0, hs=1, epochs=40, dm=0, dbow_words=1, store_model=None):
     from gensim.models.doc2vec import Doc2Vec, TaggedDocument
@@ -101,6 +116,15 @@ specifying embedding METHODs becomes optional.
 Methods
     bow         Create simple Bag of Words vectors.
     tfidf       Create Tf-Idf-weighted Bag of Words vectors.
+    lda         Use the sklearn implementation of Blei et al.'s well known
+                Latent Dirichlet Allocation to create word embeddings. Using
+                LDA to directly generate word embeddings allows combining
+                these embeddings with different methods for dimensionality
+                reduction. When used as an embedding method, LDA is always
+                based on a simple Bag of Words representation of the data.
+                This is in line with what seems to be the standard approach
+                in the vast majority of literature on using LDA for topic
+                modelling.
     doc2vec     Train doc2vec embeddings, relying on the gensim doc2vec
                 implementation. These embeddings are also used in Dimo
                 Angelov's Top2Vec. The default values specified below are
@@ -145,6 +169,12 @@ Arguments for 'bow' and 'tfidf'
     --max-df N      Ignore tokens that appear in more than N documents.
                     N is a percentage of documents and must lie between
                     0 and 1. Default: 0.5.
+
+Arguments for 'lda'
+    --vector-size N     int         default:   300
+    --max-epochs N      int         default:    40
+    --min-df N          float       default:   0.0      also see 'bow'
+    --max-df N          float       default:   1.0      also see 'bow'
 
 Arguments for 'doc2vec'
     --vector-size N     int         default:   300
@@ -223,6 +253,25 @@ def _cli(argv, infile, outfile):
                 elif k == 'max_df' and (v < 0 or v > 1):
                     raise CliError('--max-df must lie between 0 and 1')
             methods.append((cmd, cmd_opts))
+        elif rest[0] == 'lda':
+            lda_opts, rest = getopt(rest[1:], '', ['vector-size=',
+                                    'max-epochs=', 'min-df=', 'max-df='])
+            lda_opts = { k.lstrip('-').replace('-', '_'): v
+                         for k, v in lda_opts }
+            for k, v in lda_opts.items():
+                if k == 'vector-size':
+                    v = int(v); lda_opts[k] = v
+                elif k == 'max_epochs':
+                    v = int(v); lda_opts[k] = v
+                elif k == 'min_df':
+                    v = float(v); lda_opts[k] = v
+                    if v < 0 or v > 1:
+                        raise CliError('--min-df must lie between 0 and 1')
+                elif k == 'max_df':
+                    v = float(v); lda_opts[k] = v
+                    if v < 0 or v > 1:
+                        raise CliError('--max-df must lie between 0 and 1')
+            methods.append((lda, lda_opts))
         elif rest[0] == 'doc2vec':
             doc2vec_opts, rest = getopt(rest[1:], '',
                     ['vector-size=', 'min-count=', 'window=', 'sample=',
