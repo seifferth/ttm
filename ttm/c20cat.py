@@ -6,7 +6,7 @@ import re
 
 def _normalize(doc):
     doc = re.sub(r'\s+', ' ', doc)
-    return doc
+    return doc.strip()
 
 def docs():
     """
