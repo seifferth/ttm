@@ -49,6 +49,8 @@ Command Options
 def _cli(argv, infile, outfile):
     opts, cmd = gnu_getopt(argv, 'h', ['help',
         'min-chars=', 'min-tokens=', 'max-chars=', 'max-tokens='])
+    if cmd: raise CliError('ttm 20cat does not support any positional '\
+                          f'arguments but received {len(cmd)}')
     short2long = { '-h': '--help' }
     opts = { short2long.get(k, k).lstrip('-'): v for k, v in opts }
     if 'help' in opts:
