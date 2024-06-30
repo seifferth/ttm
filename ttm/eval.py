@@ -19,7 +19,7 @@ def davies_bouldin(X, y) -> float:
 
 def silhouette(X, y, metric='euclidean', sample_size=.2) -> tuple:
     from sklearn.metrics import silhouette_score
-    samples = round(len(X) * sample_size)
+    samples = max(round(len(X) * sample_size), len(set(y))+1)
     score = silhouette_score(X, y, metric=metric, sample_size=samples)
     return (score, samples)
 
