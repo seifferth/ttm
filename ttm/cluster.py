@@ -25,7 +25,7 @@ def kmeans(vectors, clusters=10, init='k-means++'):
     return KMeans(
             n_clusters = clusters,
             init = init,
-            algorithm = 'full',
+            algorithm = 'lloyd',
         ).fit_predict(vectors.matrix()).tolist()
 
 def hdbscan(vectors, metric='euclidean', cluster_selection_method='eom',
