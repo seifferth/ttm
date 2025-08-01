@@ -338,9 +338,9 @@ def _print_tsv(r: EvaluationResult):
     if r.silhouette == None:
         r.silhouette, r.silhouette_samples = 'undefined', 'undefined'
     if r.psq_distance == None:
-        r.psq_distace, r.psq_distance_sample_size = 'undefined', 'undefined'
+        r.psq_distance, r.psq_distance_sample_size = 'undefined', 'undefined'
     if r.psq_count == None:
-        r.psq_distace, r.psq_distance_sample_size = 'N/A', 'N/A'
+        r.psq_distance, r.psq_distance_sample_size = 'N/A', 'N/A'
         r.psq_count = 'N/A'
         r.psq_score, r.psq_score_zoom = 'N/A', 'N/A'
     elif r.psq_score == None:
