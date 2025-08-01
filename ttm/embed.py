@@ -259,7 +259,7 @@ def _cli(argv, infile, outfile):
             lda_opts = { k.lstrip('-').replace('-', '_'): v
                          for k, v in lda_opts }
             for k, v in lda_opts.items():
-                if k == 'vector-size':
+                if k == 'vector_size':
                     v = int(v); lda_opts[k] = v
                 elif k == 'max_epochs':
                     v = int(v); lda_opts[k] = v
