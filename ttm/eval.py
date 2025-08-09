@@ -244,6 +244,7 @@ class EvaluationResult():
         self.silhouette: float = None
         self.silhouette_samples: int = None
         self.psq_distance: float = None
+        self.psq_distance_metric = None
         self.psq_distance_sample_size = None
         self.psq_count: float = None
         self.psq_score: float = None
@@ -252,7 +253,8 @@ class EvaluationResult():
 def _parse_tsv(f: InputFile) -> EvaluationResult:
     def _parse_cell(key: str, val: str):
         if val in ['N/A', 'undefined']: return None
-        if key == 'model_name': return val
+        if key in ['model_name', 'psq_distance_metric']:
+            return val
         elif key == 'cluster_distribution':
             if not val.strip(): return val
             return json.loads(val)
@@ -305,10 +307,12 @@ def _print_text(r: EvaluationResult):
         print(f'  psq-distance             N/A')
     else:
         if r.psq_distance_sample_size == 1.:
-            print(f'  psq-distance          {r.psq_distance:<.4f}')
+            print(f'  psq-distance          {r.psq_distance:<.4f}  '
+                  f'({r.psq_distance_metric})')
         else:
             print(f'  psq-distance          {r.psq_distance:<.4f}  '
-                  f'(avg on {r.psq_distance_sample_size} of all points)')
+                  f'({r.psq_distance_metric}; '
+                  f'avg on {r.psq_distance_sample_size} of all points)')
     if r.psq_count == None:
         print(f'  psq-count                N/A')
         print(f'  psq-score                N/A')
@@ -323,7 +327,7 @@ def _print_text(r: EvaluationResult):
 
 _tsv_header = [
             'model_name', 'psq_score', 'psq_score_zoom', 'psq_count',
-            'psq_distance', 'psq_distance_sample_size',
+            'psq_distance', 'psq_distance_metric', 'psq_distance_sample_size',
             'silhouette', 'silhouette_samples', 'davies_bouldin',
             'calinski_harabasz', 'highdim_size', 'lowdim_size',
             'clusters', 'cluster_distribution'
@@ -338,14 +342,16 @@ def _print_tsv(r: EvaluationResult):
     if r.silhouette == None:
         r.silhouette, r.silhouette_samples = 'undefined', 'undefined'
     if r.psq_distance == None:
-        r.psq_distance, r.psq_distance_sample_size = 'undefined', 'undefined'
+        r.psq_distance = 'undefined'
+        r.psq_distance_metric = 'undefined'
+        r.psq_distance_sample_size = 'undefined'
     if r.psq_count == None:
         r.psq_count = 'N/A'
         r.psq_score, r.psq_score_zoom = 'N/A', 'N/A'
     elif r.psq_score == None:
         r.psq_score, r.psq_score_zoom = 'undefined', 'undefined'
     row = [ r.model_name, r.psq_score, r.psq_score_zoom, r.psq_count,
-            r.psq_distance, r.psq_distance_sample_size,
+            r.psq_distance, r.psq_distance_metric, r.psq_distance_sample_size,
             r.silhouette, r.silhouette_samples, r.davies_bouldin,
             r.calinski_harabasz, r.highdim_size, r.lowdim_size,
             r.clusters, json.dumps(r.cluster_distribution) ]
@@ -438,6 +444,8 @@ def _cli(argv, infile, outfile):
         if 'psq_pairs' in opts and not 'skip_psq_distance' in opts:
             result.psq_distance = psq_distance(f, opts['psq_pairs'],
                                                   **psq_distance_opts)
+            result.psq_distance_metric = \
+                                psq_distance_opts.get('metric', 'euclidean')
             result.psq_distance_sample_size = \
                                 psq_distance_opts.get('sample_size', 1.)
         else:
