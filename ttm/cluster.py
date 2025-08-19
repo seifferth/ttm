@@ -18,7 +18,7 @@ def aggl(vectors, clusters=10, metric='euclidean', linkage='ward'):
             n_clusters = clusters,
             metric = metric,
             linkage = linkage,
-        ).fit_predict(vectors.matrix()).tolist()
+        ).fit_predict(vectors.dense_matrix()).tolist()
 
 def kmeans(vectors, clusters=10, init='k-means++'):
     from sklearn.cluster import KMeans
