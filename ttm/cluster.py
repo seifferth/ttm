@@ -12,11 +12,11 @@ def argmax(vectors):
     from numpy import argmax
     return ( int(argmax(v)) for v in vectors )
 
-def aggl(vectors, clusters=10, affinity='euclidean', linkage='ward'):
+def aggl(vectors, clusters=10, metric='euclidean', linkage='ward'):
     from sklearn.cluster import AgglomerativeClustering
     return AgglomerativeClustering(
             n_clusters = clusters,
-            affinity = affinity,
+            metric = metric,
             linkage = linkage,
         ).fit_predict(vectors.matrix()).tolist()
 
@@ -81,15 +81,15 @@ Methods
 
 Arguments for aggl
     --clusters N        Number of clusters to produce. Default: 10.
-    --affinity METRIC   Use METRIC as a distance measure between points.
+    --metric METRIC     Use METRIC as a distance measure between points.
                         Can be any one of 'euclidean', 'l1', 'l2',
                         'manhattan', or 'cosine'. Default: 'euclidean'.
     --linkage LINKAGE   Which criterion to use for linkage. Can be any
                         one of 'ward', 'complete', 'average', or 'single'.
                         Default: 'ward'. Note that 'ward' linkage only
-                        works with the 'euclidean' affinity metric.
-                        For more information about 'affinity' and 'linkage'
-                        see 'pydoc sklearn.cluster.AgglomerativeClustering'.
+                        works with the 'euclidean' distance metric. For
+                        more information about 'metric' and 'linkage' see
+                        'pydoc sklearn.cluster.AgglomerativeClustering'.
 
 Arguments for kmeans
     --clusters N        Number of clusters to produce. Default: 10.
@@ -145,7 +145,7 @@ def _cli(argv, infile, outfile):
         fail_on_rest(args[1:])
         method, method_args = argmax, {}
     elif args[0] == 'aggl':
-        aggl_opts, rest = gnu_getopt(args[1:], '', ['clusters=', 'affinity=',
+        aggl_opts, rest = gnu_getopt(args[1:], '', ['clusters=', 'metric=',
                                      'linkage='])
         fail_on_rest(rest)
         aggl_opts = { k.lstrip('-'): v for k, v in aggl_opts }
